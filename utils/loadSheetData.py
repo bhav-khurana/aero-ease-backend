@@ -1,3 +1,3 @@
-import read_excel from pandas
+from pandas import read_excel
 
 #TODO: Import data from excel sheet for processing

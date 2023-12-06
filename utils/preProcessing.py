@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 import calendar
-import Schedule from models
+from models import Schedule
 
 
 def get_possible_routes(dataset, k, x, start_airport, end_airport, start_datetime_epoch, max_end_datetime_epoch):
@@ -32,7 +32,7 @@ def get_possible_routes(dataset, k, x, start_airport, end_airport, start_datetim
     start_flights = [flight for flight in dataset if flight[1] == start_airport and flight[3] >= start_datetime_epoch]
 
     for start_flight in start_flights:
-        find_routes([start_flight[0]], start_flight[2], start_flight[3] + start_flight[4])t
+        find_routes([start_flight[0]], start_flight[2], start_flight[3] + start_flight[4])
 
     return result
 
