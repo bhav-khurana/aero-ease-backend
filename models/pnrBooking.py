@@ -1,8 +1,9 @@
 class PNRBooking:
-    def __init__(self, recloc, departureKey, actionCode, classCode, segSeq,
+    def __init__(self, recloc, creationDate, departureKey, actionCode, classCode, segSeq,
                  paxCount, carrierCode, flightNo, originCode, destinationCode, departuredate,
-                 departureDTML, arrivalDTML, arrivalDTMZ, departureDTMZ):
+                 departureDTML, arrivalDTML, departureDTMZ, arrivalDTMZ ):
         self.recloc = recloc
+        self.creationDate = creationDate
         self.departureKey = departureKey
         self.actionCode = actionCode
         self.classCode = classCode
@@ -15,5 +16,5 @@ class PNRBooking:
         self.departuredate = departuredate
         self.departureDTML = departureDTML
         self.arrivalDTML = arrivalDTML
-        self.arrivalDTMZ = arrivalDTMZ
         self.departureDTMZ = departureDTMZ
+        self.arrivalDTMZ = arrivalDTMZ
