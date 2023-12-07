@@ -1,7 +1,58 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 import calendar
-from models import Schedule
+from loadSheetData import scheduleDataObjects, bookingPNRDataObjects
+import pandas as pd
+
+
+def get_seconds(t):
+  return (t.hour * 60 + t.minute) * 60 + t.second
+
+# changing dates and times to epochs
+# for schedule_file->
+for schedule in scheduleDataObjects:
+  date_list_string = schedule.departureDates[1:-1]
+  date_list = date_list_string.split(',')
+  datetime_obj_list = []
+  for date_string in date_list:
+    date_string = date_string.strip()
+    if date_string != '':
+      datetime_obj_list.append(datetime.strptime(date_string[1:-1], '%m/%d/%Y'))
+  schedule.departureDateTimes = datetime_obj_list
+
+for schedule in scheduleDataObjects:
+  list_epoch_dates = []
+  for dates in schedule.departureDateTimes:
+    temp_datetime_obj = datetime.combine(dates,schedule.departureTime)
+    tmp_epoch = calendar.timegm(temp_datetime_obj.timetuple())
+    list_epoch_dates.append(tmp_epoch)
+  schedule.departureEpochs = list_epoch_dates
+  schedule.duration = ((get_seconds(schedule.arrivalTime)-get_seconds(schedule.departureTime) + 86400) % 86400)
+
+#getting the data for passengers with cancelled flights
+# cancelled_flights = schedule_file[schedule_file['Status'] == 'Cancelled']
+cancelled_flights = []
+for schedule in scheduleDataObjects:
+  if schedule.status == 'Cancelled':
+    cancelled_flights.append(schedule)
+
+list_of_cancel_flightnum = []
+
+for flight in cancelled_flights:
+  list_of_cancel_flightnum.append(flight.flightNo)
+
+for booking in bookingPNRDataObjects:
+  booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
+
+# filtering out the bookings that were cancelled
+# TODO: Modify
+bookings_cancelled = []
+for flight in cancelled_flights:
+  bookings_cancelled_temp = []
+  for flight_epochs in flight.departureEpochs:
+    bookings_cancelled_tempor = booking_file.loc[(booking_file['FLT_NUM'] == row['FlightNumber']) & (booking_file['DEP_DTMZ_EPOCH'] == flight_epochs)]
+    bookings_cancelled_temp = pd.concat([bookings_cancelled_temp,bookings_cancelled_tempor])
+  bookings_cancelled = pd.concat([bookings_cancelled_temp,bookings_cancelled])
 
 
 def get_possible_routes(dataset, k, x, start_airport, end_airport, start_datetime_epoch, max_end_datetime_epoch):
@@ -40,14 +91,13 @@ def get_possible_routes(dataset, k, x, start_airport, end_airport, start_datetim
 
 dataset = []
 
-for index, row in Schedule.iterrows():
-    if row['Status'] == 'Scheduled':
+for schedule in scheduleDataObjects:
+    if schedule.status == 'Scheduled':
         for dep in row['DepartureEpoch']:
             dataset.append((row['ScheduleID'], row['DepartureAirport'], row['ArrivalAirport'], dep, row['Duration']))
 
 
 # Example usage:
-# Adjust the start_datetime accordingly
 start_datetime = calendar.timegm(datetime(2023,12,14,0,0,0).timetuple())
 start_airport = 'CNN'
 end_airport = 'MAA'
