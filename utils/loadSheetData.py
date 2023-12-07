@@ -23,19 +23,19 @@ passengerPNRData = pd.read_excel(passengerPNRFilePath)
 seatAvailabilityData = pd.read_excel(seatAvailabilityFilePath)
 
 scheduleDataObjects = []
-for index, row in scheduleData.iterrows():
-    scheduleDataObjects.append(schedule.Schedule(row['ScheduleID'], row['FlightNumber'], row['AircraftType'], row['AircraftTailNumber'], row['DepartureAirport'], row['ArrivalAirport'], row['DepartureTime'], row['ArrivalTime'], row['Status'], row['DepartureDates']))
+for index, row in scheduleData.iloc[1:].iterrows():
+    scheduleDataObjects.append(schedule.Schedule(row['ScheduleID'], row['FlightNumber'], row['AircraftType'], row['AircraftTailNumber'], row['DepartureAirport'], row['ArrivalAirport'], row['DepartureTime'], row['ArrivalTime'], row['Status'], row['DepartureDates'], [], [], 0))
 
 bookingPNRDataObjects = []
-for index, row in bookingPNRData.iterrows():
+for index, row in bookingPNRData.iloc[1:].iterrows():
     bookingPNRDataObjects.append(pnrBooking.PNRBooking(
         row["RECLOC"], row["CREATION_DTZ"], row["DEP_KEY"], row["ACTION_CD"], row["COS_CD"],
         row["SEG_SEQ"], row["PAX_CNT"], row["CARRIER_CD"], row["FLT_NUM"], row["ORIG_CD"],
-        row["DEST_CD"], row["DEP_DT"], row["DEP_DTML"], row["ARR_DTML"], row["DEP_DTMZ"], row["ARR_DTMZ"]
+        row["DEST_CD"], row["DEP_DT"], row["DEP_DTML"], row["ARR_DTML"], row["DEP_DTMZ"], row["ARR_DTMZ"], 0
     ))
 
 passengerPNRDataObjects = []
-for index, row in passengerPNRData.iterrows():
+for index, row in passengerPNRData.iloc[1:].iterrows():
     passengerPNRDataObjects.append(pnrPassenger.PNRPassenger(
         row["RECLOC"], row["CREATION_DTZ"], row["LAST_NAME"], row["FIRST_NAME"], row["NATIONALITY"],
         row["CONTACT_PH_NUM"], row["CONTACT_EMAIL"], row["DOC_ID"], row["DOC_TYPE"], row["SPECIAL_NAME_CD1"],
@@ -43,7 +43,7 @@ for index, row in passengerPNRData.iterrows():
     ))
 
 seatAvailabilityDataObjects = []
-for index, row in seatAvailabilityData.iterrows():
+for index, row in seatAvailabilityData.iloc[1:].iterrows():
      seatAvailabilityDataObjects.append(seatInventory.SeatInventory(
         row["InventoryId"], row["ScheduleId"], row["FlightNumber"], row["DepartureDate"],
         row["ArrivalDate"], row["DepartureAirport"], row["ArrivalAirport"], row["AvailableInventory"],

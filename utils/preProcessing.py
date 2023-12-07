@@ -42,6 +42,7 @@ for flight in cancelledFlights:
     listOfCancelFlightNum.append(flight.flightNo)
 
 for booking in bookingPNRDataObjects:
+    # print(booking.departureDTMZ)
     booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
 
 # Filtering out the bookings that were cancelled
@@ -111,5 +112,5 @@ startAirport = 'CNN'
 endAirport = 'MAA'
 result = getPossibleRoutes(dataset, maxConnectingFlights=3, maxDownTime=30 * 3600, startAirport=startAirport,
                             endAirport=endAirport, startDatetimeEpoch=startDatetime,
-                            maxEndDatetimeEpoch=100 * 3600 + startDatetime)
-result
+                            maxEndDatetimeEpoch=100 * 3600 + startDatetime, minDownTime=1*3600)
+print(result)
