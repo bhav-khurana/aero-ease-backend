@@ -45,7 +45,6 @@ for booking in bookingPNRDataObjects:
   booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
 
 # filtering out the bookings that were cancelled
-# TODO: Modify
 # Returns a list of reclocs by comparing flight number and departure epochs
 def get_affected_passengers(scheduleID,departureDate):
   bookings_cancelled = []
@@ -102,8 +101,8 @@ dataset = []
 
 for schedule in scheduleDataObjects:
     if schedule.status == 'Scheduled':
-        for dep in row['DepartureEpoch']:
-            dataset.append((row['ScheduleID'], row['DepartureAirport'], row['ArrivalAirport'], dep, row['Duration']))
+        for dep in schedule.departureEpochs:
+            dataset.append((schedule.scheduleID, schedule.departureAirport, schedule.arrivalAirport, dep, schedule.duration))
 
 
 # Example usage:
