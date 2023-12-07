@@ -1,8 +1,13 @@
+import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
 import calendar
-from loadSheetData import scheduleDataObjects, bookingPNRDataObjects
+from loadSheetData import scheduleDataObjects, bookingPNRDataObjects, seatAvailabilityDataObjects
 import pandas as pd
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models')))
+import journey
 
 
 def getSeconds(t):
@@ -42,7 +47,6 @@ for flight in cancelledFlights:
     listOfCancelFlightNum.append(flight.flightNo)
 
 for booking in bookingPNRDataObjects:
-    # print(booking.departureDTMZ)
     booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
 
 # Filtering out the bookings that were cancelled
@@ -63,6 +67,10 @@ def getAffectedPassengers(scheduleID, departureDate):
             bookingsCancelled.append(booking.recloc)
     return bookingsCancelled
 
+class JourneyTemp:
+    def __init__(self, journeyID, flights):
+        self.journeyID = journeyID
+        self.flights = flights
 
 def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, endAirport, startDatetimeEpoch, maxEndDatetimeEpoch, minDownTime):
     def findRoutes(route, currentAirport, currentTime):
@@ -74,7 +82,9 @@ def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, 
 
         # Check if the current airport is the destination
         if currentAirport == endAirport:
-            result.append(route.copy())
+            journey_id = str(uuid.uuid4())
+            flights_info = [(flight[0], flight[3], flight[4]) for flight in route]  # Fix index to access departureDate
+            result.append(JourneyTemp(journey_id, flights_info))
             return
 
         # Find possible connecting flights
@@ -86,13 +96,13 @@ def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, 
 
             # Check if the downtime at the current stop is within limits
             if nextDepartureTime - currentTime <= maxDownTime and nextDepartureTime - currentTime >= minDownTime:
-                findRoutes(route + [nextFlight[0]], nextFlight[2], nextDepartureTime)
+                findRoutes(route + [nextFlight], nextFlight[2], nextDepartureTime)
 
     result = []
     startFlights = [flight for flight in dataset if flight[1] == startAirport and flight[3] >= startDatetimeEpoch]
 
     for startFlight in startFlights:
-        findRoutes([startFlight[0]], startFlight[2], startFlight[3] + startFlight[4])
+        findRoutes([startFlight], startFlight[2], startFlight[3] + startFlight[4])
 
     return result
 
@@ -113,4 +123,11 @@ endAirport = 'MAA'
 result = getPossibleRoutes(dataset, maxConnectingFlights=3, maxDownTime=30 * 3600, startAirport=startAirport,
                             endAirport=endAirport, startDatetimeEpoch=startDatetime,
                             maxEndDatetimeEpoch=100 * 3600 + startDatetime, minDownTime=1*3600)
-print(result)
+
+# Print the details of each Journey
+for journeyInd in result:
+    print(f"Journey ID: {journeyInd.journeyID}")
+    print("Flights:")
+    for flight in journeyInd.flights:
+        print(f"  Schedule ID: {flight[0]}, Departure Epochs: {flight[1]}, Departure Date: {flight[2]}")
+    print()
