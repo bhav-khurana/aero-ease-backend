@@ -46,13 +46,22 @@ for booking in bookingPNRDataObjects:
 
 # filtering out the bookings that were cancelled
 # TODO: Modify
-bookings_cancelled = []
-for flight in cancelled_flights:
-  bookings_cancelled_temp = []
-  for flight_epochs in flight.departureEpochs:
-    bookings_cancelled_tempor = booking_file.loc[(booking_file['FLT_NUM'] == row['FlightNumber']) & (booking_file['DEP_DTMZ_EPOCH'] == flight_epochs)]
-    bookings_cancelled_temp = pd.concat([bookings_cancelled_temp,bookings_cancelled_tempor])
-  bookings_cancelled = pd.concat([bookings_cancelled_temp,bookings_cancelled])
+# Returns a list of reclocs by comparing flight number and departure epochs
+def get_affected_passengers(scheduleID,departureDate):
+  bookings_cancelled = []
+  cancelled_flight_dep_epoch = 0
+  for flight in scheduleDataObjects:
+      if flight.scheduleID == scheduleID:
+        index = 0
+        for i in range(len(flight.departureDateTimes)):
+           if flight.departureDateTimes[i] == departureDate:
+              index = i
+              break
+      cancelled_flight_dep_epoch = flight.departureEpochs[index]
+  for booking in bookingPNRDataObjects:
+     if booking.departureDTMZEpoch == cancelled_flight_dep_epoch:
+        bookings_cancelled.append(booking.recloc)
+  return bookings_cancelled
 
 
 def get_possible_routes(dataset, k, x, start_airport, end_airport, start_datetime_epoch, max_end_datetime_epoch):
