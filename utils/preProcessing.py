@@ -131,3 +131,4 @@ for journeyInd in result:
     for flight in journeyInd.flights:
         print(f"  Schedule ID: {flight[0]}, Departure Epochs: {flight[1]}, Departure Date: {flight[2]}")
     print()
+
