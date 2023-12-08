@@ -1,8 +1,23 @@
 class SeatInventory:
-    def __init__(self, inventoryID, scheduleID, flightNo, departureDate, arrivalDate,
-                 departureAirport, arrivalAirport, totalAvailable, fcAvailable,
-                 bcAvailable, pcAvailable, ecAvailable,
-                 fc_cd, bc_cd, pc_cd, ec_cd):
+    def __init__(
+        self,
+        inventoryID,
+        scheduleID,
+        flightNo,
+        departureDate,
+        arrivalDate,
+        departureAirport,
+        arrivalAirport,
+        totalAvailable,
+        fcAvailable,
+        bcAvailable,
+        pcAvailable,
+        ecAvailable,
+        fc_cd,
+        bc_cd,
+        pc_cd,
+        ec_cd,
+    ):
         self.inventoryID = inventoryID
         self.scheduleID = scheduleID
         self.flightNo = flightNo

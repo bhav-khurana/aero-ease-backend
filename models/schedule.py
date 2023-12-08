@@ -1,6 +1,20 @@
 class Schedule:
-    def __init__(self, scheduleID, flightNo, aircraftType, aircraftTailNo, departureAirport, arrivalAirport,
-                 departureTime, arrivalTime, status, departureDates,departureDateTimes, departureEpochs, duration):
+    def __init__(
+        self,
+        scheduleID,
+        flightNo,
+        aircraftType,
+        aircraftTailNo,
+        departureAirport,
+        arrivalAirport,
+        departureTime,
+        arrivalTime,
+        status,
+        departureDates,
+        departureDateTimes,
+        departureEpochs,
+        duration,
+    ):
         self.scheduleID = scheduleID
         self.flightNo = flightNo
         self.aircraftType = aircraftType

@@ -1,7 +1,24 @@
 class PNRBooking:
-    def __init__(self, recloc, creationDate, departureKey, actionCode, classCode, segSeq,
-                 paxCount, carrierCode, flightNo, originCode, destinationCode, departuredate,
-                 departureDTML, arrivalDTML, departureDTMZ, arrivalDTMZ, depatureDTMZEpoch):
+    def __init__(
+        self,
+        recloc,
+        creationDate,
+        departureKey,
+        actionCode,
+        classCode,
+        segSeq,
+        paxCount,
+        carrierCode,
+        flightNo,
+        originCode,
+        destinationCode,
+        departuredate,
+        departureDTML,
+        arrivalDTML,
+        departureDTMZ,
+        arrivalDTMZ,
+        depatureDTMZEpoch,
+    ):
         self.recloc = recloc
         self.creationDate = creationDate
         self.departureKey = departureKey
