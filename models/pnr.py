@@ -1,5 +1,5 @@
 class PNR:
-    def __init__ (self,recloc, ssr, cabinData , classData , downlineConnections , paidServices , bookingType , noPAX , loyalty):
+    def __init__ (self, recloc, ssr = None, cabinData = None, classData = None, connectingFlights = None, paidServices = None, bookingType = None, noPAX = None, loyalty = None):
         self.recloc = recloc
         self.ssr = ssr
         self.cabinData = cabinData
