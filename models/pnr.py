@@ -1,11 +1,11 @@
 class PNR:
-    def __init__ (self,recloc, ssr, cabinData , classData , connectingFlights , paidServices , bookingType , noPAX , loyalty):
+    def __init__ (self,recloc, ssr, cabinData , classData , downlineConnections , paidServices , bookingType , noPAX , loyalty):
         self.recloc = recloc
         self.ssr = ssr
         self.cabinData = cabinData
         self.classData = classData
-        self.connectingFlights = connectingFlights
+        self.downlineConnections = downlineConnections
         self.paidServices = paidServices
-        self.bookingType = bookingType #booked as a group etc
+        self.bookingType = bookingType #booked as a group
         self.noPAX = noPAX
         self.loyalty = loyalty
