@@ -7,7 +7,6 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models')))
 import journey
 
-
 def getSeconds(t):
     return (t.hour * 60 + t.minute) * 60 + t.second
 
@@ -69,6 +68,7 @@ class JourneyTemp:
         self.journeyID = journeyID
         self.flights = flights
 
+# function to get alternate routes/flights
 def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, endAirport, startDatetimeEpoch, maxEndDatetimeEpoch, minDownTime):
     def findRoutes(route, currentAirport, currentTime):
         nonlocal result
@@ -103,6 +103,43 @@ def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, 
 
     return result
 
+# Function to get actual journeys from the possible routes
+# Returns a list of Journey objects (journeyID, flights, availableSeats)
+def getActualJourneys(possibleRoutes):
+    # Function to get available seats for a particular flight
+    def getAvailableSeats(scheduleID, departureDate):
+        seatsAvailable = []
+        for seat in seatAvailabilityDataObjects:
+            if seat.scheduleID == scheduleID and seat.departureDate == departureDate:
+                seatsAvailable = [('fc', seat.fcAvailable), ('bc', seat.bcAvailable), ('pc', seat.pcAvailable), ('ec', seat.ecAvailable)]
+        return seatsAvailable
+        
+    # list of actual journey objects (journeyID, flights, availableSeats)
+    actualJourneys = []
+    for tempJourney in possibleRoutes:
+        fcSeats = []
+        bcSeats = []
+        pcSeats = []
+        ecSeats = []
+        
+        for flight in tempJourney.flights:
+            seatsAvailable = getAvailableSeats(flight[0], flight[2])
+            fcSeats.append(seatsAvailable[0][1])
+            bcSeats.append(seatsAvailable[1][1])
+            pcSeats.append(seatsAvailable[2][1])
+            ecSeats.append(seatsAvailable[3][1])
+        
+        minFCSeats = min(fcSeats)
+        minBCSeats = min(bcSeats)
+        minPCSeats = min(pcSeats)
+        minECSeats = min(ecSeats)
+        
+        actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('fc', minFCSeats)))
+        actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('bc', minBCSeats)))
+        actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('pc', minPCSeats)))
+        actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('ec', minECSeats)))
+
+
 # Creating a dataset for the getPossibleRoutes function
 dataset = []
 for schedule in scheduleDataObjects:
@@ -114,42 +151,10 @@ for schedule in scheduleDataObjects:
 startDatetime = calendar.timegm(datetime(2023, 12, 14, 0, 0, 0).timetuple())
 startAirport = 'CNN'
 endAirport = 'MAA'
-result = getPossibleRoutes(dataset, maxConnectingFlights=3, maxDownTime=30 * 3600, startAirport=startAirport,
+possibleRoutes = getPossibleRoutes(dataset, maxConnectingFlights=3, maxDownTime=30 * 3600, startAirport=startAirport,
                             endAirport=endAirport, startDatetimeEpoch=startDatetime,
                             maxEndDatetimeEpoch=100 * 3600 + startDatetime, minDownTime=1*3600)
+actualJourneys = getActualJourneys(possibleRoutes)
 
-# Function to get available seats for a particular flight
-def getAvailableSeats(scheduleID, departureDate):
-    seatsAvailable = []
-    for seat in seatAvailabilityDataObjects:
-        if seat.scheduleID == scheduleID and seat.departureDate == departureDate:
-            seatsAvailable = [('fc', seat.fcAvailable), ('bc', seat.bcAvailable), ('pc', seat.pcAvailable), ('ec', seat.ecAvailable)]
-    return seatsAvailable
-    
-# list of actual journey objects (journeyID, flights, availableSeats)
-actualJourneys = []
-for tempJourney in result:
-    fcSeats = []
-    bcSeats = []
-    pcSeats = []
-    ecSeats = []
-    
-    for flight in tempJourney.flights:
-        seatsAvailable = getAvailableSeats(flight[0], flight[2])
-        fcSeats.append(seatsAvailable[0][1])
-        bcSeats.append(seatsAvailable[1][1])
-        pcSeats.append(seatsAvailable[2][1])
-        ecSeats.append(seatsAvailable[3][1])
-    
-    minFCSeats = min(fcSeats)
-    minBCSeats = min(bcSeats)
-    minPCSeats = min(pcSeats)
-    minECSeats = min(ecSeats)
-    
-    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('fc', minFCSeats)))
-    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('bc', minBCSeats)))
-    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('pc', minPCSeats)))
-    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('ec', minECSeats)))
-    
 for journey in actualJourneys:
     print(journey.journeyID, journey.flights, journey.availableSeats)
