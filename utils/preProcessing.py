@@ -1,9 +1,7 @@
 import uuid
-from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 import calendar
 from loadSheetData import scheduleDataObjects, bookingPNRDataObjects, seatAvailabilityDataObjects
-import pandas as pd
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models')))
@@ -35,7 +33,6 @@ for schedule in scheduleDataObjects:
     schedule.duration = ((getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400) % 86400)
 
 # Getting the data for passengers with cancelled flights
-# cancelledFlights = schedule_file[schedule_file['Status'] == 'Cancelled']
 cancelledFlights = []
 for schedule in scheduleDataObjects:
     if schedule.status == 'Cancelled':
@@ -106,15 +103,12 @@ def getPossibleRoutes(dataset, maxConnectingFlights, maxDownTime, startAirport, 
 
     return result
 
-
-
+# Creating a dataset for the getPossibleRoutes function
 dataset = []
-
 for schedule in scheduleDataObjects:
     if schedule.status == 'Scheduled':
         for dep in schedule.departureEpochs:
             dataset.append((schedule.scheduleID, schedule.departureAirport, schedule.arrivalAirport, dep, schedule.duration))
-
 
 # Example usage:
 startDatetime = calendar.timegm(datetime(2023, 12, 14, 0, 0, 0).timetuple())
@@ -124,10 +118,36 @@ result = getPossibleRoutes(dataset, maxConnectingFlights=3, maxDownTime=30 * 360
                             endAirport=endAirport, startDatetimeEpoch=startDatetime,
                             maxEndDatetimeEpoch=100 * 3600 + startDatetime, minDownTime=1*3600)
 
-# Print the details of each Journey
-for journeyInd in result:
-    print(f"Journey ID: {journeyInd.journeyID}")
-    print("Flights:")
-    for flight in journeyInd.flights:
-        print(f"  Schedule ID: {flight[0]}, Departure Epochs: {flight[1]}, Departure Date: {flight[2]}")
-    print()
+# Function to get available seats for a particular flight
+def getAvailableSeats(scheduleID, departureDate):
+    seatsAvailable = []
+    for seat in seatAvailabilityDataObjects:
+        if seat.scheduleID == scheduleID and seat.departureDate == departureDate:
+            seatsAvailable = [('fc', seat.fcAvailable), ('bc', seat.bcAvailable), ('pc', seat.pcAvailable), ('ec', seat.ecAvailable)]
+    return seatsAvailable
+    
+# list of actual journey objects (journeyID, flights, availableSeats)
+actualJourneys = []
+for tempJourney in result:
+    fcSeats = []
+    bcSeats = []
+    pcSeats = []
+    ecSeats = []
+    
+    for flight in tempJourney.flights:
+        seatsAvailable = getAvailableSeats(flight[0], flight[2])
+        fcSeats.append(seatsAvailable[0][1])
+        bcSeats.append(seatsAvailable[1][1])
+        pcSeats.append(seatsAvailable[2][1])
+        ecSeats.append(seatsAvailable[3][1])
+    
+    minFCSeats = min(fcSeats)
+    minBCSeats = min(bcSeats)
+    minPCSeats = min(pcSeats)
+    minECSeats = min(ecSeats)
+    
+    availableSeats = [('fc', minFCSeats), ('bc', minBCSeats), ('pc', minPCSeats), ('ec', minECSeats)]
+    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, availableSeats))
+    
+for journey in actualJourneys:
+    print(journey.journeyID, journey.flights, journey.availableSeats)
