@@ -1,20 +1,15 @@
 import uuid
-import calendar
 from datetime import datetime
+import calendar
 from loadSheetData import (
     scheduleDataObjects,
     bookingPNRDataObjects,
     seatAvailabilityDataObjects,
 )
-from models import journey
 
 
 def getSeconds(t):
     return (t.hour * 60 + t.minute) * 60 + t.second
-
-
-for booking in bookingPNRDataObjects:
-    booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
 
 
 # Filtering out the bookings that were cancelled
@@ -42,7 +37,7 @@ class JourneyTemp:
         self.flights = flights
 
 
-# Function to get alternate routes/flights
+# function to get alternate routes/flights
 def getPossibleRoutes(
     dataset,
     maxConnectingFlights,

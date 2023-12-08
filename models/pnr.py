@@ -2,14 +2,14 @@ class PNR:
     def __init__(
         self,
         recloc,
-        ssr,
-        cabinData,
-        classData,
-        connectingFlights,
-        paidServices,
-        bookingType,
-        noPAX,
-        loyalty,
+        ssr=None,
+        cabinData=None,
+        classData=None,
+        connectingFlights=None,
+        paidServices=None,
+        bookingType=None,
+        noPAX=None,
+        loyalty=None,
     ):
         self.recloc = recloc
         self.ssr = ssr
