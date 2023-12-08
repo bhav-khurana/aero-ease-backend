@@ -146,8 +146,10 @@ for tempJourney in result:
     minPCSeats = min(pcSeats)
     minECSeats = min(ecSeats)
     
-    availableSeats = [('fc', minFCSeats), ('bc', minBCSeats), ('pc', minPCSeats), ('ec', minECSeats)]
-    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, availableSeats))
+    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('fc', minFCSeats)))
+    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('bc', minBCSeats)))
+    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('pc', minPCSeats)))
+    actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('ec', minECSeats)))
     
 for journey in actualJourneys:
     print(journey.journeyID, journey.flights, journey.availableSeats)
