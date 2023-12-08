@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 import calendar
-from loadSheetData import scheduleDataObjects, bookingPNRDataObjects, seatAvailabilityDataObjects
+from loadSheetData import scheduleDataObjects, bookingPNRDataObjects, seatAvailabilityDataObjects, passengerPNRDataObjects
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models')))
-import journey
+import journey, pnr
 
 def getSeconds(t):
     return (t.hour * 60 + t.minute) * 60 + t.second
@@ -30,38 +30,6 @@ for schedule in scheduleDataObjects:
         listEpochDates.append(tmpEpoch)
     schedule.departureEpochs = listEpochDates
     schedule.duration = ((getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400) % 86400)
-
-# Getting the data for passengers with cancelled flights
-cancelledFlights = []
-for schedule in scheduleDataObjects:
-    if schedule.status == 'Cancelled':
-        cancelledFlights.append(schedule)
-
-listOfCancelFlightNum = []
-
-for flight in cancelledFlights:
-    listOfCancelFlightNum.append(flight.flightNo)
-
-for booking in bookingPNRDataObjects:
-    booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
-
-# Filtering out the bookings that were cancelled
-# Returns a list of reclocs by comparing flight number and departure epochs
-def getAffectedPassengers(scheduleID, departureDate):
-    bookingsCancelled = []
-    cancelledFlightDepEpoch = 0
-    for flight in scheduleDataObjects:
-        if flight.scheduleID == scheduleID:
-            index = 0
-            for i in range(len(flight.departureDateTimes)):
-                if flight.departureDateTimes[i] == departureDate:
-                    index = i
-                    break
-            cancelledFlightDepEpoch = flight.departureEpochs[index]
-    for booking in bookingPNRDataObjects:
-        if booking.departureDTMZEpoch == cancelledFlightDepEpoch:
-            bookingsCancelled.append(booking.recloc)
-    return bookingsCancelled
 
 class JourneyTemp:
     def __init__(self, journeyID, flights):
@@ -139,13 +107,86 @@ def getActualJourneys(possibleRoutes):
         actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('pc', minPCSeats)))
         actualJourneys.append(journey.Journey(tempJourney.journeyID, tempJourney.flights, ('ec', minECSeats)))
 
-
 # Creating a dataset for the getPossibleRoutes function
 dataset = []
 for schedule in scheduleDataObjects:
     if schedule.status == 'Scheduled':
         for dep in schedule.departureEpochs:
             dataset.append((schedule.scheduleID, schedule.departureAirport, schedule.arrivalAirport, dep, schedule.duration))
+
+# Getting the data for passengers with cancelled flights
+cancelledFlights = []
+for schedule in scheduleDataObjects:
+    if schedule.status == 'Cancelled':
+        cancelledFlights.append(schedule)
+
+listOfCancelFlightNum = []
+
+for flight in cancelledFlights:
+    listOfCancelFlightNum.append(flight.flightNo)
+
+for booking in bookingPNRDataObjects:
+    booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
+
+# Function to get affected passengers
+# Returns a list of PNR objects
+def getAffectedPassengers(scheduleID, departureDate):
+    bookingsCancelled = []
+    cancelledFlightDepEpoch = 0
+    for flight in scheduleDataObjects:
+        if flight.scheduleID == scheduleID:
+            index = 0
+            for i in range(len(flight.departureDateTimes)):
+                if flight.departureDateTimes[i] == departureDate:
+                    index = i
+                    break
+            cancelledFlightDepEpoch = flight.departureEpochs[index]
+    for booking in bookingPNRDataObjects:
+        if booking.departureDTMZEpoch == cancelledFlightDepEpoch:
+            bookingsCancelled.append(booking)
+    
+    reclocsCancelled = []
+    for booking in bookingsCancelled:
+        reclocsCancelled.append(booking.recloc)
+    
+    pnrObjects = []
+    for recloc in reclocsCancelled:
+        pnrObjects.append(pnr.PNR(recloc))
+        ssr = []
+        for passenger in passengerPNRDataObjects:
+            if passenger.recloc == recloc:
+                ssr = str(passenger.specialNameCode1)[1:-1].split(',') + str(passenger.specialNameCode2)[1:-1].split(',') + str(passenger.ssr)[1:-1].split(',')
+                break
+        pnrObjects[-1].ssr = ssr
+
+    for booking in bookingsCancelled:
+        for pnrObject in pnrObjects:
+            if pnrObject.recloc == booking.recloc:
+                pnrObject.noPAX = booking.paxCount
+                pnrObject.classData = booking.classCode
+                break
+
+    for recloc in reclocsCancelled:
+        connections = 0
+        curr = 0
+        for booking in bookingsCancelled:
+            if booking.recloc == recloc:
+                curr = booking.departureDTMZEpoch
+                break
+        
+        bookingPNRDataObjects.sort(key = lambda x: x.departureDTMZEpoch)
+        for booking in bookingPNRDataObjects:
+            if booking.recloc == recloc:
+                if booking.departureDTMZEpoch > curr and booking.departureDTMZEpoch - curr < 3600*24:
+                    connections += 1
+                    curr = booking.departureDTMZEpoch
+        
+        for pnrObject in pnrObjects:
+            if pnrObject.recloc == recloc:
+                pnrObject.connectingFlights = connections
+                break
+
+    return pnrObjects
 
 # Example usage:
 startDatetime = calendar.timegm(datetime(2023, 12, 14, 0, 0, 0).timetuple())
