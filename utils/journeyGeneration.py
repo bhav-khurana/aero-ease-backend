@@ -1,57 +1,17 @@
 import uuid
-from datetime import datetime
 import calendar
+from datetime import datetime
 from loadSheetData import (
     scheduleDataObjects,
     bookingPNRDataObjects,
     seatAvailabilityDataObjects,
 )
-import os
-import sys
-
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
-)
-import journey
+from models import journey
 
 
 def getSeconds(t):
     return (t.hour * 60 + t.minute) * 60 + t.second
 
-
-# Changing dates and times to epochs
-# For schedule_file ->
-for schedule in scheduleDataObjects:
-    dateListString = schedule.departureDates[1:-1]
-    dateList = dateListString.split(",")
-    dateTimeObjList = []
-    for dateString in dateList:
-        dateString = dateString.strip()
-        if dateString != "":
-            dateTimeObjList.append(datetime.strptime(dateString[1:-1], "%m/%d/%Y"))
-    schedule.departureDateTimes = dateTimeObjList
-
-for schedule in scheduleDataObjects:
-    listEpochDates = []
-    for dates in schedule.departureDateTimes:
-        tempDateTimeObj = datetime.combine(dates, schedule.departureTime)
-        tmpEpoch = calendar.timegm(tempDateTimeObj.timetuple())
-        listEpochDates.append(tmpEpoch)
-    schedule.departureEpochs = listEpochDates
-    schedule.duration = (
-        getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400
-    ) % 86400
-
-# Getting the data for passengers with cancelled flights
-cancelledFlights = []
-for schedule in scheduleDataObjects:
-    if schedule.status == "Cancelled":
-        cancelledFlights.append(schedule)
-
-listOfCancelFlightNum = []
-
-for flight in cancelledFlights:
-    listOfCancelFlightNum.append(flight.flightNo)
 
 for booking in bookingPNRDataObjects:
     booking.departureDTMZEpoch = calendar.timegm((booking.departureDTMZ).timetuple())
@@ -82,7 +42,7 @@ class JourneyTemp:
         self.flights = flights
 
 
-# function to get alternate routes/flights
+# Function to get alternate routes/flights
 def getPossibleRoutes(
     dataset,
     maxConnectingFlights,

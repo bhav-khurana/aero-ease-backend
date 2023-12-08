@@ -5,7 +5,7 @@ import sys
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 )
-import pnrBooking, pnrPassenger, schedule, seatInventory
+from models import pnrBooking, pnrPassenger, schedule, seatInventory
 
 absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
