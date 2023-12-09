@@ -1,19 +1,19 @@
 import pandas as pd
 import os
 import sys
-
+from datetime import datetime
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 )
-from models import pnrBooking, pnrPassenger, schedule, seatInventory
+import pnrBooking, pnrPassenger, schedule, seatInventory
 
 absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
 
-scheduleFileName = "schedule.xlsx"
-bookingPNRFileName = "bookingPNR.xlsx"
-passengerPNRFileName = "passengerPNR.xlsx"
-seatAvailabilityFileName = "seatAvailability.xlsx"
+scheduleFileName = "schedule.csv"
+bookingPNRFileName = "bookingPNR.csv"
+passengerPNRFileName = "passengerPNR.csv"
+seatAvailabilityFileName = "seatAvailability.csv"
 
 scheduleFilePath = os.path.join(absolutePath, "..", dataDirectory, scheduleFileName)
 bookingPNRFilePath = os.path.join(absolutePath, "..", dataDirectory, bookingPNRFileName)
@@ -24,13 +24,13 @@ seatAvailabilityFilePath = os.path.join(
     absolutePath, "..", dataDirectory, seatAvailabilityFileName
 )
 
-scheduleData = pd.read_excel(scheduleFilePath)
-bookingPNRData = pd.read_excel(bookingPNRFilePath)
-passengerPNRData = pd.read_excel(passengerPNRFilePath)
-seatAvailabilityData = pd.read_excel(seatAvailabilityFilePath)
+scheduleData = pd.read_csv(scheduleFilePath)
+bookingPNRData = pd.read_csv(bookingPNRFilePath)
+passengerPNRData = pd.read_csv(passengerPNRFilePath)
+seatAvailabilityData = pd.read_csv(seatAvailabilityFilePath)
 
 scheduleDataObjects = []
-for index, row in scheduleData.iloc[1:].iterrows():
+for index, row in scheduleData.iterrows():
     scheduleDataObjects.append(
         schedule.Schedule(
             row["ScheduleID"],
@@ -39,8 +39,8 @@ for index, row in scheduleData.iloc[1:].iterrows():
             row["AircraftTailNumber"],
             row["DepartureAirport"],
             row["ArrivalAirport"],
-            row["DepartureTime"],
-            row["ArrivalTime"],
+            datetime.strptime(str(row["DepartureTime"]), '%H:%M'),
+            datetime.strptime(str(row["ArrivalTime"]), '%H:%M'),
             row["Status"],
             row["DepartureDates"],
             [],
@@ -50,7 +50,7 @@ for index, row in scheduleData.iloc[1:].iterrows():
     )
 
 bookingPNRDataObjects = []
-for index, row in bookingPNRData.iloc[1:].iterrows():
+for index, row in bookingPNRData.iterrows():
     bookingPNRDataObjects.append(
         pnrBooking.PNRBooking(
             row["RECLOC"],
@@ -74,7 +74,7 @@ for index, row in bookingPNRData.iloc[1:].iterrows():
     )
 
 passengerPNRDataObjects = []
-for index, row in passengerPNRData.iloc[1:].iterrows():
+for index, row in passengerPNRData.iterrows():
     passengerPNRDataObjects.append(
         pnrPassenger.PNRPassenger(
             row["RECLOC"],
@@ -93,7 +93,7 @@ for index, row in passengerPNRData.iloc[1:].iterrows():
     )
 
 seatAvailabilityDataObjects = []
-for index, row in seatAvailabilityData.iloc[1:].iterrows():
+for index, row in seatAvailabilityData.iterrows():
     seatAvailabilityDataObjects.append(
         seatInventory.SeatInventory(
             row["InventoryId"],
