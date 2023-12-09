@@ -1,5 +1,19 @@
 class PNRPassenger:
-    def __init__(self, recloc, creationDate, lastName, firstName, nationality, contactNo, contact_email, docID, docType, specialNameCode1, specialNameCode2, ssr):
+    def __init__(
+        self,
+        recloc,
+        creationDate,
+        lastName,
+        firstName,
+        nationality,
+        contactNo,
+        contact_email,
+        docID,
+        docType,
+        specialNameCode1,
+        specialNameCode2,
+        ssr,
+    ):
         self.recloc = recloc
         self.creationDate = creationDate
         self.lastName = lastName
