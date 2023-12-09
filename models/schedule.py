@@ -28,3 +28,11 @@ class Schedule:
         self.departureDateTimes = departureDateTimes
         self.departureEpochs = departureEpochs
         self.duration = duration
+        
+    def __repr__(self):
+        return f"Schedule ID: {self.scheduleID}\nFlight No: {self.flightNo}\nAircraft Type: {self.aircraftType}\n" \
+               f"Aircraft Tail No: {self.aircraftTailNo}\nDeparture Airport: {self.departureAirport}\n" \
+               f"Arrival Airport: {self.arrivalAirport}\nDeparture Time: {self.departureTime}\n" \
+               f"Arrival Time: {self.arrivalTime}\nStatus: {self.status}\nDeparture Dates: {self.departureDates}\n" \
+               f"Departure DateTimes: {self.departureDateTimes}\nDeparture Epochs: {self.departureEpochs}\n" \
+               f"Duration: {self.duration}\n\n"
