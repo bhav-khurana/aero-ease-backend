@@ -24,7 +24,7 @@ def getSeconds(t):
 # For schedule_file ->
 for schedule in scheduleDataObjects:
     dateListString = schedule.departureDates[1:-1]
-    dateList = dateListString.split(", ")
+    dateList = dateListString.split(",")
     dateTimeObjList = []
     for dateString in dateList:
         dateString = dateString.strip()
