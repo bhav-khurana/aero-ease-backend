@@ -37,6 +37,9 @@ def get_people(number):
 def get_schedule_id(start,end,i):
     return "SCH-ZZ-0000"+str(i*8*8+start*8+end).zfill(3)
 
+def get_inventory_id(start,end,i,day):
+    return "INV-ZZ-"+str(day*196 + i*64 + start*8 + end).zfill(7)
+
 
 def main(samples=25):
     people = [] 
@@ -90,6 +93,65 @@ def main(samples=25):
                     "08/{}/2024".format(19+date_offset)
                     ))
                 counter += 1
+    with open('seating-out.csv','w') as f:
+        f.write("InventoryId,ScheduleId,FlightNumber,AircraftType,DepartureDate,ArrivalDate,DepartureAirport,ArrivalAirport,TotalCapacity,"
+                "TotalInventory,BookedInventory,Oversold,AvailableInventory,FirstClass,BusinessClass,PremiumEconomyClass,EconomyClass,"
+                "FC_TotalInventory,FC_BookedInventory,FC_AvailableInventory, BC_TotalInventory,BC_BookedInventory,BC_AvailableInventory,"
+                "PC_TotalInventory,PC_BookedInventory,PC_AvailableInventory, EC_TotalInventory,EC_BookedInventory,EC_AvailableInventory,"
+                "FC_CD,BC_CD,PC_CD,EC_CD\n")
+        for day in range(6):
+            for start in range(8):
+                for end in range(8):
+                    if start == end : continue
+                    for t in range(3):
+                        fc = randint(10,27)
+                        bc = randint(20,54)
+                        pc = randint(35,81)
+                        ec = randint(40,108)
+                        fc_inv = randint(1,5)
+                        bc_inv = randint(1,7)
+                        pc_inv = randint(1,10)
+                        ec_inv = randint(1,20)
+                        f.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                            get_inventory_id(start,end,t,day),
+                            get_schedule_id(start,end,t),
+                            (1000+start*8+end),
+                            "Boeing 787",
+                            (f"08/%d/2024"%(19+day)),
+                            (f"08/%d/2024"%(19+day)),
+                            airports[start],
+                            airports[end],
+                            270,
+                            270 + fc_inv + bc_inv + pc_inv + ec_inv,
+                            fc + bc + pc + ec,
+                            fc + bc + pc + ec - 270,
+                            270 - fc - bc - pc - ec + fc_inv + bc_inv + pc_inv + ec_inv,
+                            27,
+                            54,
+                            81,
+                            108,
+                            27+fc_inv,
+                            fc,
+                            27+fc_inv - fc,
+                            54+bc_inv,
+                            bc,
+                            54+bc_inv - bc,
+                            81+pc_inv,
+                            pc,
+                            81+pc_inv - pc,
+                            108+ec_inv,
+                            ec,
+                            108+ec_inv - ec,
+                            "\"{'F': 16, 'P': 11}\"",
+                            "\"{'C': 22, 'J': 16, 'Z': 16}\"",
+                            "\"{'Q': 24, 'R': 16, 'S': 8, 'T': 8, 'H': 16, 'M': 8}\"",
+                            "\"{'Y': 8, 'A': 8, 'B': 4, 'D': 4, 'E': 4, 'G': 8, 'I': 4, 'K': 8, 'L': 4, 'N': 4, 'O': 4, 'U': 8, 'V': 4, 'W': 4, 'X': 4}\""
+                            ))
+
+
+
+
+                
                     
     
 
