@@ -11,9 +11,11 @@ absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
 
 scheduleFileName = "schedule-out - schedule-out.csv.csv"
-bookingPNRFileName = "people-out - people-out.csv.csv"
-passengerPNRFileName = "pnr-out - pnr-out.csv.csv"
+bookingPNRFileName = "pnr-out - pnr-out.csv.csv"
+passengerPNRFileName = "people-out - people-out.csv.csv"
 seatAvailabilityFileName = "seatAvailability.csv"
+# pnr-out - pnr-out.csv.csv
+# people-out - people-out.csv.csv
 
 scheduleFilePath = os.path.join(absolutePath, "..", dataDirectory, scheduleFileName)
 bookingPNRFilePath = os.path.join(absolutePath, "..", dataDirectory, bookingPNRFileName)
