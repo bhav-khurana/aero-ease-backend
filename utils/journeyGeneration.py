@@ -13,7 +13,7 @@ from loadSheetData import (
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 )
-import journey, pnr
+import journey, pnr,pnrBooking , pnrPassenger , schedule , seatInventory
 
 
 def getSeconds(t):
@@ -40,7 +40,7 @@ for schedule in scheduleDataObjects:
             dates, datetime.fromtimestamp(timestamp).time()
         )
         tmpEpoch = calendar.timegm(tempDateTimeObj.timetuple())
-        listEpochDates.append(tmpEpoch)
+        listEpochDates.append(tmpEpoch-2*3)
     schedule.departureEpochs = listEpochDates
     schedule.duration = (
         getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400
@@ -56,19 +56,21 @@ listOfCancelFlightNum = []
 
 for flight in cancelledFlights:
     listOfCancelFlightNum.append(flight.flightNo)
-
+#there is some error in calculation here
 for booking in bookingPNRDataObjects:
     parsedTime = parser.parse(booking.departureDTMZ)
     booking.departureDTMZEpoch = parsedTime.timestamp()
 
-
+# need to change this when the data comes 
 # Filtering out the bookings that were cancelled
 # Returns a list of reclocs by comparing flight number and departure epochs
 def getAffectedPassengers(scheduleID, departureDate):
     bookingsCancelled = []
+    flightNo = 0
     cancelledFlightDepEpoch = 0
     for flight in scheduleDataObjects:
         if flight.scheduleID == scheduleID:
+            flightNo = flight.flightNo
             index = 0
             for i in range(len(flight.departureDateTimes)):
                 if flight.departureDateTimes[i] == departureDate:
@@ -76,7 +78,7 @@ def getAffectedPassengers(scheduleID, departureDate):
                     break
             cancelledFlightDepEpoch = flight.departureEpochs[index]
     for booking in bookingPNRDataObjects:
-        if booking.departureDTMZEpoch == cancelledFlightDepEpoch:
+        if booking.flightNo == flightNo:
             bookingsCancelled.append(booking)
 
     reclocsCancelled = []
@@ -293,9 +295,10 @@ def getActualJourneys(possibleRoutes):
 
     return actualJourneys
 
-
-print("possibleRoutes:", possibleRoutes)
-
+affectedPassengers = getAffectedPassengers("SCH-ZZ-0000030",datetime(2024,8,20,0,0))
+print("affectedPassengers:",affectedPassengers)
+#print("possibleRoutes:", scheduleDataObjects[78].scheduleID,scheduleDataObjects[78].departureEpochs)
+#print(datetime(2024,8,20,0,0))
 actualJourneys = getActualJourneys(possibleRoutes)
 for journey in actualJourneys:
     print(journey.journeyID, journey.flights, journey.availableSeats)
