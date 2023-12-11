@@ -3,7 +3,6 @@ import sys
 import random
 from dimod import BinaryQuadraticModel, Binary
 from dwave.system import LeapHybridBQMSampler
-from datetime import datetime
 import numpy as np
 
 sys.path.append(
@@ -29,12 +28,12 @@ print("Actual passengers: ", affectedPassengers)
 upgradesAllowed = False
 downgradesAllowed = False
 originalScheduleID = "SCH-ZZ-0000030"
-originalDepartureDate = datetime(2024,8,24)
+originalDepartureDate = "2024-08-20"
 
 
 
 class weights:
-    def __init__(self, ssrWeights, cabinWeights, classWeights, connectingFlightsWeight, paidServicesWeight, bookingTypeWeight, noPAXWeight, loyaltyWeight, stopoverWeight, sameEquipment, cityPairWeights, departureDiffWeights, arrivalDiffWeights):
+    def __init__(self, ssrWeights, cabinWeights, classWeights, connectingFlightsWeight, paidServicesWeight, bookingTypeWeight, noPAXWeight, loyaltyWeight, stopoverWeight, sameEquipmentWeight, cityPairWeights, departureDiffWeights, arrivalDiffWeights):
         self.ssrWeights = ssrWeights
         self.cabinWeights = cabinWeights
         self.classWeights = classWeights
@@ -44,19 +43,32 @@ class weights:
         self.noPAXWeight = noPAXWeight
         self.loyaltyWeight = loyaltyWeight
         self.stopoverWeight = stopoverWeight
-        self.sameEquipment = sameEquipment
+        self.sameEquipmentWeight = sameEquipmentWeight
         self.cityPairWeights = cityPairWeights
         self.departureDiffWeights = departureDiffWeights
         self.arrivalDiffWeights = arrivalDiffWeights
 
 
 #The way it's supposed to look:
-ssrWeights = {'ADT': 0, 'CHD': 0, 'INF': 0, 'INS': 0, 'UNN': 0, 'S65': 0, 'NRPS': 0, 'NRSA': 0, 'WCHR': 0, 'BLND': 0, 'DEAF': 0}
-cabinWeights = {'Y': 0, 'J': 0, 'F': 0}
-classWeights = {'A': 0, 'C': 0, 'K': 0}
-cityPairWeights = {'SSP': 0, 'DCPSC': 0, 'DCP': 0}
+ssrWeights = {
+    'INFT': 200, 'WCHR': 200, 'WCHS': 200, 'WCHC': 200, 'LANG': 200, 
+    'CHLD': 200, 'MAAS': 200, 'UNMR': 200, 'BLND': 200, 'DEAF': 200, 
+    'EXST': 200, 'MEAL': 200, 'NSST': 200, 'NRPS': 200
+}
+cabinWeights = {'Y': 1500, 'J': 1500, 'F': 1500}
+classWeights = {'A': 800, 'C': 800, 'K': 800}
+connectingFlightsWeight = 100
+paidServicesWeight = 200
+bookingTypeWeight = 500
+noPAXWeight = 50
+loyaltyWeight = 1700
 departureDiffWeights = [70, 50, 40, 30]
 arrivalDiffWeights = [70, 50, 40, 30]
+cityPairWeights = {'SSP': 40, 'DCPSC': 30, 'DCP': 20}
+stopoverWeight = -20
+sameEquipmentWeight = 50
+
+currentWeights = weights(ssrWeights, cabinWeights, classWeights, connectingFlightsWeight, paidServicesWeight, bookingTypeWeight, noPAXWeight, loyaltyWeight, stopoverWeight, sameEquipmentWeight, cityPairWeights, departureDiffWeights, arrivalDiffWeights)
 
 def ssrCalculator(pnr, ssrWeights):
     sum = 0
@@ -66,17 +78,9 @@ def ssrCalculator(pnr, ssrWeights):
 
 def scheduleIDToEpochs(scheduleID, departureDate):
     departureEpoch = 0
-    arrivalEpoch = 0 
-    for schedule in scheduleDataObjects:
-        if schedule.scheduleID == scheduleID:
-            index = 0
-            for i in range(len(schedule.departureEpochs)):
-                if schedule.departureDateTimes[i] == departureDate:
-                    index = i
-                    break
-            departureEpoch = schedule.departureEpochs[index]
-            arrivalEpoch = departureEpoch + schedule.duration
-    return departureEpoch , arrivalEpoch
+    arrivalEpoch = 0
+    #TODO: Add code for converting scheduleID to epochs
+    return departureEpoch, arrivalEpoch
 
 
 def coefficientCalculator(journey, pnr, weights):
@@ -134,7 +138,7 @@ def coefficientCalculator(journey, pnr, weights):
         sum -= 10000
     return sum
 
-def generateVariablesAndCoefficients(journeys, pnrs):
+def generateVariablesAndCoefficients(journeys, pnrs, weights):
     x=[]
     c=[]
     n=0
@@ -167,11 +171,11 @@ def solveFlightSchedule(obj):
     bqm_answer = bqm_sampler.sample(obj)
     return bqm_answer
 
-def solutionGenerator(journeys, pnrs):
-    obj, c = generateVariablesAndCoefficients(journeys, pnrs)
+def solutionGenerator(journeys, pnrs, weights):
+    obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
     print(c)
     print(solveFlightSchedule(obj))
 
-solutionGenerator(actualJourneys, affectedPassengers)
+solutionGenerator(actualJourneys, affectedPassengers, currentWeights)
