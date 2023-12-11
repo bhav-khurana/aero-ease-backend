@@ -3,6 +3,7 @@ import sys
 import random
 from dimod import BinaryQuadraticModel, Binary
 from dwave.system import LeapHybridBQMSampler
+from datetime import datetime
 import numpy as np
 
 sys.path.append(
@@ -28,7 +29,7 @@ print("Actual passengers: ", acturalPassengers)
 upgradesAllowed = False
 downgradesAllowed = False
 originalScheduleID = "SCH-ZZ-0000030"
-originalDepartureDate = "2024-08-20"
+originalDepartureDate = datetime(2024,8,24)
 
 
 
@@ -65,9 +66,17 @@ def ssrCalculator(pnr, ssrWeights):
 
 def scheduleIDToEpochs(scheduleID, departureDate):
     departureEpoch = 0
-    arrivalEpoch = 0
-    #TODO: Add code for converting scheduleID to epochs
-    return departureEpoch, arrivalEpoch
+    arrivalEpoch = 0 
+    for schedule in scheduleDataObjects:
+        if schedule.scheduleID == scheduleID:
+            index = 0
+            for i in range(len(schedule.departureEpochs)):
+                if schedule.departureDateTimes[i] == departureDate:
+                    index = i
+                    break
+            departureEpoch = schedule.departureEpochs[index]
+            arrivalEpoch = departureEpoch + schedule.duration
+    return departureEpoch , arrivalEpoch
 
 
 def coefficientCalculator(journey, pnr, weights):

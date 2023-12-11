@@ -317,7 +317,7 @@ def getActualJourneys(possibleRoutes):
 
     return actualJourneys
 
-
+'''
 def scheduleIDToEpochs(scheduleID,departureDate):
     Epochs = [] #returns epochs at index0- departure and at index1- arrival 
     for schedule in scheduleDataObjects:
@@ -329,10 +329,10 @@ def scheduleIDToEpochs(scheduleID,departureDate):
                     break
             Epochs.append(schedule.departureEpochs[index])
             Epochs.append(int(schedule.departureEpochs[index])+schedule.duration)
-    return Epochs
-
-Epoch = scheduleIDToEpochs("SCH-ZZ-0000030",datetime(2024,8,20))
-print(Epoch)
+    return Epochs[0],Epochs[1]
+'''
+#Epoch = scheduleIDToEpochs("SCH-ZZ-0000030",datetime(2024,8,20))
+#print(Epoch)
 affectedPassengers = getAffectedPassengers("SCH-ZZ-0000030",datetime(2024,8,20))
 '''
 print(affectedPassengers[0].connectingFlights)
