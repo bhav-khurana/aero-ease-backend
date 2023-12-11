@@ -317,15 +317,34 @@ def getActualJourneys(possibleRoutes):
 
     return actualJourneys
 
+
+def scheduleIDToEpochs(scheduleID,departureDate):
+    Epochs = [] #returns epochs at index0- departure and at index1- arrival 
+    for schedule in scheduleDataObjects:
+        if schedule.scheduleID == scheduleID:
+            index = 0
+            for i in range(len(schedule.departureEpochs)):
+                if schedule.departureDateTimes[i] == departureDate:
+                    index = i
+                    break
+            Epochs.append(schedule.departureEpochs[index])
+            Epochs.append(int(schedule.departureEpochs[index])+schedule.duration)
+    return Epochs
+
+Epoch = scheduleIDToEpochs("SCH-ZZ-0000030",datetime(2024,8,20))
+print(Epoch)
 affectedPassengers = getAffectedPassengers("SCH-ZZ-0000030",datetime(2024,8,20))
-'''print(affectedPassengers[0].connectingFlights)
+'''
+print(affectedPassengers[0].connectingFlights)
 for booking in bookingPNRDataObjects:
     print(booking.recloc , booking.departureDTMZEpoch)
 print(bookingPNRDataObjects[1].departureDTMZEpoch)
 print(len(bookingPNRDataObjects))
 print("affectedPassengers:",affectedPassengers[0].recloc)
 print("possibleRoutes:", possibleRoutes)
-print(datetime(2024,8,20,0,0))'''
+print(datetime(2024,8,20,0,0))
+'''
+
 actualJourneys = getActualJourneys(possibleRoutes)
 for journey in actualJourneys:
     print(journey.journeyID, journey.flights, journey.availableSeats)
