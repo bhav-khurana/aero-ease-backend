@@ -12,7 +12,7 @@ import journey, pnr
 
 from journeyGeneration import (
     actualJourneys,
-    acturalPassengers,
+    affectedPassengers,
 )
 
 from loadSheetData import (
@@ -23,7 +23,7 @@ from loadSheetData import (
 )
 
 print("Actual journeys: ", actualJourneys)
-print("Actual passengers: ", acturalPassengers)
+print("Actual passengers: ", affectedPassengers)
 
 upgradesAllowed = False
 downgradesAllowed = False
@@ -164,3 +164,5 @@ def solutionGenerator(journeys, pnrs):
     addLinearInequalityConstraints(obj, journeys, pnrs)
     print(c)
     print(solveFlightSchedule(obj))
+
+solutionGenerator(actualJourneys, affectedPassengers)
