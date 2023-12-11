@@ -15,7 +15,7 @@ class PNR:
         self.ssr = ssr
         self.cabinData = cabinData
         self.classData = classData
-        self.downlineConnections = downlineConnections
+        self.connectingFlights = connectingFlights
         self.paidServices = paidServices
         self.bookingType = bookingType  # Booked as a group etc.
         self.noPAX = noPAX

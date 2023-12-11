@@ -10,10 +10,10 @@ import pnrBooking, pnrPassenger, schedule, seatInventory
 absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
 
-scheduleFileName = "schedule-out - schedule-out.csv.csv"
-bookingPNRFileName = "pnr-out - pnr-out.csv.csv"
-passengerPNRFileName = "people-out - people-out.csv.csv"
-seatAvailabilityFileName = "seatAvailability.csv"
+scheduleFileName = "schedule-out.csv"
+bookingPNRFileName = "pnr-out.csv"
+passengerPNRFileName = "people-out.csv"
+seatAvailabilityFileName = "seating-out.csv"
 # pnr-out - pnr-out.csv.csv
 # people-out - people-out.csv.csv
 
