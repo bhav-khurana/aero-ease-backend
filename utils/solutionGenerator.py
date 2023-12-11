@@ -156,11 +156,11 @@ def addLinearInequalityConstraints(obj, journeys, pnrs):
 def solveFlightSchedule(obj):
     bqm_sampler = LeapHybridBQMSampler()
     bqm_answer = bqm_sampler.sample(obj)
-    print(bqm_answer)
+    return bqm_answer
 
 def solutionGenerator(journeys, pnrs):
     obj, c = generateVariablesAndCoefficients(journeys, pnrs)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
     print(c)
-    solveFlightSchedule(obj)
+    print(solveFlightSchedule(obj))
