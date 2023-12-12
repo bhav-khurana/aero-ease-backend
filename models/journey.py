@@ -1,8 +1,8 @@
 class Journey:
-    def __init__(self, journeyID, flights, availableCount):
+    def __init__(self, journeyID, flights, availableSeats):
         self.journeyID = journeyID  # ID of the journey
         self.flights = flights  # List of (scheduleID, departureEpoch, departureDate)
-        self.availableCount = availableCount  # Available seats (class, noOfSeats)
+        self.availableSeats = availableSeats  # Available seats (class, noOfSeats)
 
     def __repr__(self):
         flights_repr = ", ".join(
@@ -11,5 +11,5 @@ class Journey:
         )
         return (
             f"Journey(journeyID={self.journeyID}, flights=[{flights_repr}], "
-            f"availableCount={self.availableCount})"
+            f"availableSeats={self.availableSeats})"
         )
