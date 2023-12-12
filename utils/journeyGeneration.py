@@ -192,7 +192,7 @@ def getPossibleRoutes(
         if currentAirport == endAirport:
             journey_id = str(uuid.uuid4())
             flights_info = [
-                (flight[0], flight[3], datetime.utcfromtimestamp(flight[3]))
+                (flight[0], flight[3], datetime.utcfromtimestamp(flight[3] + 19800))
                 for flight in route
             ]  # Fix index to access departureDate
             result.append(JourneyTemp(journey_id, flights_info))
@@ -247,7 +247,7 @@ for schedule in scheduleDataObjects:
             )
 
 # Example usage:
-startDatetime = calendar.timegm(datetime(2024, 8, 20, 0, 0, 0).timetuple())
+startDatetime = calendar.timegm(datetime(2024, 8, 20, 14, 0, 0).timetuple())
 startAirport = "DUB"
 endAirport = "DEL"
 possibleRoutes = getPossibleRoutes(
