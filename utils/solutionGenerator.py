@@ -140,8 +140,6 @@ def cabinAssigner(classData):
     return cabin_mapping.get(classData, 'Invalid classData')
 
 def scheduleIDToEpochs(scheduleID, departureDate):
-    print("scheduleID: ", scheduleID)
-    print("departureDate: ", type(departureDate.date()))
     departureEpoch = 0
     arrivalEpoch = 0
     for schedule in scheduleDataObjects:
@@ -149,7 +147,6 @@ def scheduleIDToEpochs(scheduleID, departureDate):
             index = 0
             for i in range(len(schedule.departureEpochs)):
                 if schedule.departureDateTimes[i].date() == departureDate.date():
-                    print("oye match ho gya")
                     index = i
                     break
             departureEpoch = schedule.departureEpochs[index]
@@ -170,7 +167,7 @@ def coefficientCalculator(journey, pnr, weights):
         pass
     else:
         if journey.availableSeats[0] != cabinAssigner(pnr.classData):
-            print("oye yahan pe aaya")
+            print("oye cabin data match nhi ho rha")
             sum -= 10000
         else:
             sum += weights.cabinWeights[cabinAssigner(pnr.classData)]
@@ -181,7 +178,7 @@ def coefficientCalculator(journey, pnr, weights):
     sum += weights.noPAXWeight * pnr.noPAX
     # sum += weights.loyaltyWeight * pnr.loyalty
     if journey.availableSeats[1] < pnr.noPAX:
-        print("abe yahan pe aaya")
+        print("oye seats hi nhi hai")
         sum -= 10000
     if len(journey.flights) > 1:
         sum += weights.stopoverWeight * (len(journey.flights) - 1)
@@ -203,7 +200,7 @@ def coefficientCalculator(journey, pnr, weights):
     if overallDeparture < originalDeparture:
         print("overallDeparture: ", overallDeparture)
         print("originalDeparture: ", originalDeparture)
-        print("yes yahan pe aaya")
+        print("oye departure match nhi ho rha")
         sum -= 10000
     elif overallDeparture - originalDeparture <= 6 * 3600:
         sum += departureDiffWeights[0]
@@ -214,7 +211,7 @@ def coefficientCalculator(journey, pnr, weights):
     elif overallDeparture - originalDeparture <= 48 * 3600:
         sum += departureDiffWeights[3]
     else:
-        print("yahan pe aaya")
+        print("oye bht late ho gya")
         sum -= 10000
     if overallArrival - originalArrival <= 6 * 3600:
         sum += arrivalDiffWeights[0]
@@ -225,7 +222,7 @@ def coefficientCalculator(journey, pnr, weights):
     elif overallArrival - originalArrival <= 48 * 3600:
         sum += arrivalDiffWeights[3]
     else:
-        print("nhi yahan pe aaya")
+        print("oye aur late ho gya")
         sum -= 10000
     return sum
 
@@ -264,6 +261,7 @@ def addLinearInequalityConstraints(obj, journeys, pnrs):
             label=f"col_{j}",
             ub=2 * journeys[j].availableSeats[1],
         )
+        print(journeys[j].availableSeats[0], journeys[j].availableSeats[1])
 
 
 def solveFlightSchedule(obj):
@@ -277,7 +275,7 @@ def solutionGenerator(journeys, pnrs, weights):
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
     print(c)
-    print(solveFlightSchedule(obj))
+    print(solveFlightSchedule(obj).first.sample)
 
 
 solutionGenerator(actualJourneys, affectedPassengers, currentWeights)

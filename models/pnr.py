@@ -20,3 +20,11 @@ class PNR:
         self.bookingType = bookingType  # Booked as a group etc.
         self.noPAX = noPAX
         self.loyalty = loyalty
+    
+    def __repr__(self):
+        return (
+            f"PNR(recloc={self.recloc}, ssr={self.ssr}, cabinData={self.cabinData}, "
+            f"classData={self.classData}, connectingFlights={self.connectingFlights}, "
+            f"paidServices={self.paidServices}, bookingType={self.bookingType}, "
+            f"noPAX={self.noPAX}, loyalty={self.loyalty})    "
+        )
