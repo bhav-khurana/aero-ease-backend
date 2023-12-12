@@ -128,13 +128,16 @@ def ssrCalculator(pnr, ssrWeights):
 
 
 def scheduleIDToEpochs(scheduleID, departureDate):
+    print("scheduleID: ", scheduleID)
+    print("departureDate: ", type(departureDate.date()))
     departureEpoch = 0
     arrivalEpoch = 0
     for schedule in scheduleDataObjects:
         if schedule.scheduleID == scheduleID:
             index = 0
             for i in range(len(schedule.departureEpochs)):
-                if schedule.departureDateTimes[i] == departureDate:
+                if schedule.departureDateTimes[i].date() == departureDate.date():
+                    print("oye match ho gya")
                     index = i
                     break
             departureEpoch = schedule.departureEpochs[index]
@@ -172,15 +175,19 @@ def coefficientCalculator(journey, pnr, weights):
         sum += weights.stopoverWeight * (len(journey.flights) - 1)
     # TODO: Add code for same equipment
     # TODO: Add code for city pair
+    print("--------------------")
     overallDeparture, _ = scheduleIDToEpochs(
         journey.flights[0][0], journey.flights[0][2]
     )
+    print("--------------------")
     _, overallArrival = scheduleIDToEpochs(
         journey.flights[-1][0], journey.flights[-1][2]
     )
+    print("--------------------")
     originalDeparture, originalArrival = scheduleIDToEpochs(
         originalScheduleID, originalDepartureDate
     )
+    print("--------------------")
     if overallDeparture < originalDeparture:
         print("overallDeparture: ", overallDeparture)
         print("originalDeparture: ", originalDeparture)

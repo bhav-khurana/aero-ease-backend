@@ -59,7 +59,7 @@ for schedule in scheduleDataObjects:
     schedule.duration = (
         getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400
     ) % 86400
-
+    
 # Getting the data for passengers with cancelled flights
 cancelledFlights = []
 for schedule in scheduleDataObjects:
