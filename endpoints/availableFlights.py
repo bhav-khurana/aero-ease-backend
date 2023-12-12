@@ -17,7 +17,12 @@ class AvailableFlights(Resource):
     def delete(self):
         data = json.loads(request.data)
         print(data)
-        # TODO: parse the data
+        cancelledFlights = []
+        for flight in data:
+            cancelledFlights.append((flight["scheduleID"], flight["date"]))
+        
+        # TODO: call the main function    
+        
         # TODO: generate solution from data
         response = flask.jsonify({"message": "ok"})
         return response
