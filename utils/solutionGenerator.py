@@ -90,7 +90,7 @@ ssrWeights = {
     "NRPS": 200,
     " NRSA": 200,
 }
-cabinWeights = {"Y": 1500, "J": 1500, "F": 1500}
+cabinWeights = {"fc": 1500, "bc": 1500, "pc": 1500, "ec": 1500,}
 classWeights = {letter: 800 for letter in string.ascii_uppercase}
 connectingFlightsWeight = 100
 paidServicesWeight = 200
@@ -126,6 +126,18 @@ def ssrCalculator(pnr, ssrWeights):
         sum += ssrWeights[pnr.ssr[i]]
     return sum
 
+def cabinAssigner(classData):
+    classData = classData.upper()    
+    cabin_mapping = {
+        'A': 'fc', 'B': 'bc', 'C': 'pc', 'D': 'ec',
+        'E': 'fc', 'F': 'bc', 'G': 'pc', 'H': 'ec',
+        'I': 'fc', 'J': 'bc', 'K': 'pc', 'L': 'ec',
+        'M': 'fc', 'N': 'bc', 'O': 'pc', 'P': 'ec',
+        'Q': 'fc', 'R': 'bc', 'S': 'pc', 'T': 'ec',
+        'U': 'fc', 'V': 'bc', 'W': 'pc', 'X': 'ec',
+        'Y': 'fc', 'Z': 'bc',
+    }
+    return cabin_mapping.get(classData, 'Invalid classData')
 
 def scheduleIDToEpochs(scheduleID, departureDate):
     print("scheduleID: ", scheduleID)
@@ -149,7 +161,7 @@ def coefficientCalculator(journey, pnr, weights):
     sum = 0
     sum += ssrCalculator(pnr, weights.ssrWeights)
     if upgradesAllowed and downgradesAllowed:
-        sum += weights.cabinWeights[pnr.cabinData]
+        sum += weights.cabinWeights[cabinAssigner(pnr.classData)]
     elif upgradesAllowed:
         # TODO: Add code for upgrades
         pass
@@ -157,11 +169,11 @@ def coefficientCalculator(journey, pnr, weights):
         # TODO: Add code for downgrades
         pass
     else:
-        if journey.availableSeats[0] != pnr.cabinData:
+        if journey.availableSeats[0] != cabinAssigner(pnr.classData):
             print("oye yahan pe aaya")
             sum -= 10000
         else:
-            sum += weights.cabinWeights[pnr.cabinData]
+            sum += weights.cabinWeights[cabinAssigner(pnr.classData)]
     sum += weights.classWeights[pnr.classData]
     sum += weights.connectingFlightsWeight * pnr.connectingFlights
     # sum += weights.paidServicesWeight * pnr.paidServices
