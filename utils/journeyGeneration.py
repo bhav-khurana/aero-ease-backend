@@ -35,7 +35,7 @@ for schedule in scheduleDataObjects:
     # Convert each date string to a datetime object and add to the list
     for dateString in dateList:
         dateString = dateString.strip()
-        if dateString != "":
+        if dateString != "" and dateString != "'Cancelled'":
             dateTimeObjList.append(datetime.strptime(dateString[1:-1], "%m/%d/%Y"))
 
     # Assume schedule.departureTime is a time object associated with the schedule

@@ -6,6 +6,14 @@ from utils.journeyGeneration import (
 from utils.solutionGenerator import (
     solutionGenerator,
 )
+import os
+import pandas as pd
+from datetime import datetime
+
+absolutePath = os.path.dirname(__file__)
+dataDirectory = "data"
+scheduleFileName = "SCH-ZZ-20231208_035117.csv"
+scheduleFilePath = os.path.join(absolutePath, "..", dataDirectory, scheduleFileName)
 
 class Weights:
     def __init__(
@@ -66,148 +74,6 @@ def jsonToWeights(jsonData):
         arrivalDiffWeights,
     )
 
-# Example usage
-jsonData = {
-  "flightRankingRules": {
-    "arrivalDelay": [
-      {
-        "enabled": True,
-        "score": 70,
-        "difference": 6,
-        "description": "Arrival delay is less than 6 hours."
-      },
-      {
-        "enabled": True,
-        "score": 50,
-        "difference": 12,
-        "description": "Arrival delay is less than 12 hours."
-      },
-      {
-        "enabled": True,
-        "score": 40,
-        "difference": 24,
-        "description": "Arrival delay is less than 24 hours."
-      },
-      {
-        "enabled": True,
-        "score": 30,
-        "difference": 48,
-        "description": "Arrival delay is less than 48 hours."
-      }
-    ],
-    "cityPair": [
-      { "enabled": True, "score": 40, "title": "Same city pair" },
-      { "enabled": True, "score": 30, "title": "Different city pair but the same city" },
-      { "enabled": True, "score": 20, "title": "Different cities" }
-    ],
-    "std": [
-      { "enabled": True, "score": 70, "difference": 6, "description": "SPF is less than 6 hours." },
-      {
-        "enabled": True,
-        "score": 50,
-        "difference": 12,
-        "description": "SPF is less than 12 hours."
-      },
-      {
-        "enabled": True,
-        "score": 40,
-        "difference": 24,
-        "description": "SPF is less than 24 hours."
-      },
-      {
-        "enabled": True,
-        "score": 30,
-        "difference": 48,
-        "description": "SPF is less than 48 hours."
-      }
-    ],
-    "general": [
-      {
-        "enabled": True,
-        "title": "Stopover",
-        "score": -20,
-        "description": "If the flight has a stopover, then this score will be deducted."
-      },
-      {
-        "title": "Same Equipement",
-        "enabled": True,
-        "score": 50,
-        "description": "Is the flight operated by the same equipment?"
-      }
-    ]
-  },
-  "pnrRankingRules": {
-    "ssr": [
-      { "type": "INFT", "enabled": True, "value": 433, "description": "Infant" },
-      { "type": "WCHR", "enabled": True, "value": 200, "description": "Wheelchair, can walk" },
-      {
-        "type": "WCHS",
-        "enabled": True,
-        "value": 200,
-        "description": "Wheelchair, can't climb stairs"
-      },
-      { "type": "WCHC", "enabled": True, "value": 200, "description": "Complete immobile" },
-      { "type": "LANG", "enabled": True, "value": 200, "description": "Language restrictions" },
-      { "type": "CHLD", "enabled": True, "value": 200, "description": "Child" },
-      {
-        "type": "MAAS",
-        "enabled": True,
-        "value": 200,
-        "description": "Meet and assist - many reasons"
-      },
-      { "type": "UNMR", "enabled": True, "value": 200, "description": "Unaccompanied minor" },
-      { "type": "BLND", "enabled": True, "value": 200, "description": "Blind" },
-      { "type": "DEAF", "enabled": True, "value": 200, "description": "Deaf" },
-      {
-        "type": "EXST",
-        "enabled": True,
-        "value": 200,
-        "description": "Large person taking up two seats"
-      },
-      { "type": "MEAL", "enabled": True, "value": 200, "description": "Meal request" },
-      { "type": "NSST", "enabled": True, "value": 200, "description": "Seat information" },
-      { "type": "NRPS", "enabled": True, "value": 200 }
-    ],
-    "cabin": [
-      { "cabin": "F", "enabled": True, "value": 1500 },
-      { "cabin": "J", "enabled": True, "value": 1500 },
-      { "cabin": "Y", "enabled": True, "value": 1500 }
-    ],
-    "class": [
-      { "class": "A", "enabled": True, "value": 800 },
-      { "class": "C", "enabled": True, "value": 800 },
-      { "class": "K", "enabled": True, "value": 800 }
-    ],
-    "other": [
-      {
-        "title": "Connection",
-        "description": "If the flight is a connection, the priority is incremented by the 'value' times the number of downline connections.",
-        "enabled": True,
-        "value": 100
-      },
-      {
-        "title": "Paid Service",
-        "description": "If the flight is a paid service, the priority is incremented by the value.",
-        "enabled": True,
-        "value": 200
-      },
-      { "title": "Group Booking", "enabled": True, "value": 500 },
-      {
-        "title": "Loyality",
-        "enabled": True,
-        "value": 1700,
-        "description": "If the passenger is a loyality member, the priority is incremented by the 'value'."
-      },
-      {
-        "title": "Number of Passengers",
-        "enabled": True,
-        "value": 50,
-        "description": "If the number of passengers is greater than 1, the priority is incremented by the 'value' times the number of passengers."
-      }
-    ]
-  }
-}
-
 def printWeights(weights):
     print("SSR Weights:", weights.ssrWeights)
     print("Class Weights:", weights.classWeights)
@@ -243,6 +109,25 @@ def getCombinedActualJourneys(scheduleDatetimeTuples):
 def universalFunction(scheduleDatetimeTuples, jsonData):
   
     # TODO: change the status of the cancelled flights in the database
+    # [(scheduleID, datetime)]
+    df = pd.read_csv(scheduleFilePath)
+    for scheduleID, date in scheduleDatetimeTuples:
+        for index, row in df.iterrows():
+            if row["ScheduleID"] == scheduleID:
+                dates = row["DepartureDates"][1:-1].split(", ")
+                for i in range(len(dates)):
+                  if (dates[i] == "'Cancelled'"):
+                    dates[i] = 'Cancelled'
+                    continue
+                  tmpDate = dates[i]
+                  tmpDate = datetime.strptime(tmpDate[1:-1], '%m/%d/%Y')
+                  if tmpDate.date() == date.date():
+                    dates[i] = 'Cancelled'
+                  else:
+                    dates[i] = dates[i][1:-1]
+                dates = str(dates)
+                df.loc[index, "DepartureDates"] = dates
+    df.to_csv(scheduleFilePath, index=False)
     
     weights = jsonToWeights(jsonData)
     affectedPassengers = getCombinedAffectedPassengers(scheduleDatetimeTuples)
