@@ -231,26 +231,27 @@ def getPossibleRoutes(
     return result
 
 
-# Creating a dataset for the getPossibleRoutes function
-dataset = []
-for schedule in scheduleDataObjects:
-    if schedule.status == "Scheduled":
-        for dep in schedule.departureEpochs:
-            dataset.append(
-                (
-                    schedule.scheduleID,
-                    schedule.departureAirport,
-                    schedule.arrivalAirport,
-                    dep,
-                    schedule.duration,
+def getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate):
+    dataset = []
+    startAirport = ""
+    endAirport = ""
+    for schedule in scheduleDataObjects:
+        if schedule.status == "Scheduled":
+            for dep in schedule.departureEpochs:
+                dataset.append(
+                    (
+                        schedule.scheduleID,
+                        schedule.departureAirport,
+                        schedule.arrivalAirport,
+                        dep,
+                        schedule.duration,
+                    )
                 )
-            )
-
-# Example usage:
-startDatetime = calendar.timegm(datetime(2024, 8, 20, 14, 0, 0).timetuple())
-startAirport = "DUB"
-endAirport = "DEL"
-possibleRoutes = getPossibleRoutes(
+                if schedule.scheduleID == scheduleID and dep == departureDate:
+                    startAirport = schedule.departureAirport
+                    endAirport = schedule.arrivalAirport
+    startDatetime = calendar.timegm(departureDate.timetuple())
+    possibleRoutes = getPossibleRoutes(
     dataset,
     maxConnectingFlights=4,
     maxDownTime=24 * 3600,
@@ -260,11 +261,11 @@ possibleRoutes = getPossibleRoutes(
     maxEndDatetimeEpoch=100 * 3600 + startDatetime,
     minDownTime=1 * 3600,
 )
-
+    return possibleRoutes
 
 # Function to get actual journeys from the possible routes
 # Returns a list of Journey objects (journeyID, flights, availableSeats)
-def getActualJourneys(possibleRoutes):
+def getJourneys(possibleRoutes):
     # Function to get available seats for a particular flight
     def getAvailableSeats(scheduleID, departureDate):
         seatsAvailable = []
@@ -321,6 +322,11 @@ def getActualJourneys(possibleRoutes):
 
     return actualJourneys
 
+def getActualJourneys(scheduleID, departureDate):
+    possibleRoutes = getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate)
+    actualJourneys = getJourneys(possibleRoutes)
+    return actualJourneys
+
 
 """
 def scheduleIDToEpochs(scheduleID,departureDate):
@@ -350,6 +356,6 @@ print("possibleRoutes:", possibleRoutes)
 print(datetime(2024,8,20,0,0))
 """
 
-actualJourneys = getActualJourneys(possibleRoutes)
+actualJourneys = getActualJourneys("SCH-ZZ-0000030", datetime(2024, 8, 20))
 for journey in actualJourneys:
     print(journey.journeyID, journey.flights, journey.availableSeats)
