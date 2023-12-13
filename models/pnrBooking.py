@@ -17,7 +17,7 @@ class PNRBooking:
         arrivalDTML,
         departureDTMZ,
         arrivalDTMZ,
-        depatureDTMZEpoch,
+        depatureDTMLEpoch,
     ):
         self.recloc = recloc
         self.creationDate = creationDate
@@ -35,4 +35,4 @@ class PNRBooking:
         self.arrivalDTML = arrivalDTML
         self.departureDTMZ = departureDTMZ
         self.arrivalDTMZ = arrivalDTMZ
-        self.departureDTMZEpoch = depatureDTMZEpoch
+        self.departureDTMLEpoch = depatureDTMLEpoch

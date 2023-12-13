@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-import calendar
+import numpy as np
 import sys, os
 from dateutil import parser
 from loadSheetData import (
@@ -23,14 +23,13 @@ def getSeconds(t):
 # Changing dates and times to epochs
 # For schedule_file ->
 import calendar
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime
 
 # Iterate over each schedule in scheduleDataObjects
 for schedule in scheduleDataObjects:
     # Extract departure dates as strings and split them into a list
     dateListString = schedule.departureDates[1:-1]
-    dateList = dateListString.split(",")
+    dateList = dateListString.split(", ")
     dateTimeObjList = []
 
     # Convert each date string to a datetime object and add to the list
@@ -47,40 +46,23 @@ for schedule in scheduleDataObjects:
     listEpochDates = []
 
     for dt in schedule.departureDateTimes:
-        # Assuming schedule.departureTime is a time object associated with the schedule
-        # If it's a datetime object, you may need to adjust accordingly
         schedule_datetime = datetime.combine(dt.date(), schedule.departureTime.time())
 
-        # Calculate the epoch timestamp
         tmpEpoch = int(schedule_datetime.timestamp())
-        listEpochDates.append(tmpEpoch)  # Subtract 2 hours (2*3600 seconds) if needed
+        listEpochDates.append(tmpEpoch)
 
     schedule.departureEpochs = listEpochDates
     schedule.duration = (
         getSeconds(schedule.arrivalTime) - getSeconds(schedule.departureTime) + 86400
     ) % 86400
-    
+
+nan = float("nan")
 # Getting the data for passengers with cancelled flights
-cancelledFlights = []
-for schedule in scheduleDataObjects:
-    if schedule.status == "Cancelled":
-        cancelledFlights.append(schedule)
-
-listOfCancelFlightNum = []
-
-for flight in cancelledFlights:
-    listOfCancelFlightNum.append(flight.flightNo)
-# there is some error in calculation here
 for booking in bookingPNRDataObjects:
-    # Assuming booking.departureDTMZ is a string representing date and time
-    departure_string = booking.departureDTMZ
-    # Parse the string into a datetime object
-    parsedTime = datetime.strptime(departure_string, "%m/%d/%y %H:%M:%S")
-    # Convert the datetime object to a Unix timestamp
-    booking.departureDTMZEpoch = int(parsedTime.timestamp())
+    departure_string = booking.departureDTML
+    parsedTime = datetime.strptime(departure_string, "%m/%d/%Y %H:%M")
+    booking.departureDTMLEpoch = int(parsedTime.timestamp())
 
-
-# need to change this when the data comes
 # Filtering out the bookings that were cancelled
 # Returns a list of reclocs by comparing flight number and departure epochs
 def getAffectedPassengers(scheduleID, departureDate):
@@ -96,15 +78,13 @@ def getAffectedPassengers(scheduleID, departureDate):
                     index = i
                     break
             cancelledFlightDepEpoch = flight.departureEpochs[index]
-            # print(cancelledFlightDepEpoch)
             break
     for booking in bookingPNRDataObjects:
         if (
             booking.flightNo == flightNo
-            and booking.departureDTMZEpoch == cancelledFlightDepEpoch
+            and booking.departureDTMLEpoch == cancelledFlightDepEpoch
         ):
             bookingsCancelled.append(booking)
-            # print(booking.departureDTMZEpoch)
 
     reclocsCancelled = []
     for booking in bookingsCancelled:
@@ -113,16 +93,22 @@ def getAffectedPassengers(scheduleID, departureDate):
     pnrObjects = []
     for recloc in reclocsCancelled:
         pnrObjects.append(pnr.PNR(recloc))
-        ssr = []
+        ssr = set()
+        loyalities = []
         for passenger in passengerPNRDataObjects:
             if passenger.recloc == recloc:
-                ssr = (
-                    str(passenger.specialNameCode1)[1:-1].split(",")
-                    + str(passenger.specialNameCode2)[1:-1].split(",")
-                    + str(passenger.ssr)[1:-1].split(",")
-                )
-                break
+                if passenger.ssr != None and passenger.ssr != nan:
+                    ssr.add(passenger.ssr)
+                if passenger.specialNameCode1 != None and passenger.specialNameCode1 != nan:
+                    ssr.add(passenger.specialNameCode1)
+                if passenger.specialNameCode2 != None and passenger.specialNameCode2 != nan:
+                    ssr.add(passenger.specialNameCode2)
+                if passenger.loyalty != None and passenger.loyalty != nan:
+                    loyalities.append(passenger.loyalty)
+
+        ssr = list(ssr)
         pnrObjects[-1].ssr = ssr
+        pnrObjects[-1].loyalty = loyalities
 
     for booking in bookingsCancelled:
         for pnrObject in pnrObjects:
@@ -131,23 +117,23 @@ def getAffectedPassengers(scheduleID, departureDate):
                 pnrObject.classData = booking.classCode
                 break
 
+    bookingPNRDataObjects.sort(key=lambda x: x.departureDTMLEpoch)
     for recloc in reclocsCancelled:
         connections = 0
         curr = 0
         for booking in bookingsCancelled:
             if booking.recloc == recloc:
-                curr = booking.departureDTMZEpoch
+                curr = booking.departureDTMLEpoch
                 break
 
-        bookingPNRDataObjects.sort(key=lambda x: x.departureDTMZEpoch)
         for booking in bookingPNRDataObjects:
             if booking.recloc == recloc:
                 if (
-                    booking.departureDTMZEpoch > curr
-                    and booking.departureDTMZEpoch - curr < 3600 * 24
+                    booking.departureDTMLEpoch > curr
+                    and booking.departureDTMLEpoch - curr < 3600 * 24
                 ):
                     connections += 1
-                    curr = booking.departureDTMZEpoch
+                    curr = booking.departureDTMLEpoch
 
         for pnrObject in pnrObjects:
             if pnrObject.recloc == recloc:
@@ -167,8 +153,7 @@ class JourneyTemp:
             f"({scheduleID}, {departureEpoch}, {departureDate})"
             for scheduleID, departureEpoch, departureDate in self.flights
         )
-        return f"JourneyTemp(journeyID={self.journeyID}, flights=[{flights_repr}])"
-
+        return f"JourneyTemp(journeyID={self.journeyID}, flights=[{flights_repr}])\n"
 
 # function to get alternate routes/flights
 def getPossibleRoutes(
@@ -194,7 +179,7 @@ def getPossibleRoutes(
             flights_info = [
                 (flight[0], flight[3], datetime.utcfromtimestamp(flight[3] + 19800))
                 for flight in route
-            ]  # Fix index to access departureDate
+            ] # 19800 is the offset for IST
             result.append(JourneyTemp(journey_id, flights_info))
             return
 
@@ -235,33 +220,39 @@ def getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate):
     dataset = []
     startAirport = ""
     endAirport = ""
+    startDatetime = 0
     for schedule in scheduleDataObjects:
         if schedule.status == "Scheduled":
-            for dep in schedule.departureEpochs:
+            for i in range(len(schedule.departureEpochs)):
                 dataset.append(
                     (
                         schedule.scheduleID,
                         schedule.departureAirport,
                         schedule.arrivalAirport,
-                        dep,
+                        schedule.departureEpochs[i],
                         schedule.duration,
                     )
                 )
-                if schedule.scheduleID == scheduleID and dep == departureDate:
+                if (
+                    schedule.scheduleID == scheduleID
+                    and schedule.departureDateTimes[i] == departureDate
+                ):
                     startAirport = schedule.departureAirport
                     endAirport = schedule.arrivalAirport
-    startDatetime = calendar.timegm(departureDate.timetuple())
+                    startDatetime = schedule.departureEpochs[i]
+                    
     possibleRoutes = getPossibleRoutes(
-    dataset,
-    maxConnectingFlights=4,
-    maxDownTime=24 * 3600,
-    startAirport=startAirport,
-    endAirport=endAirport,
-    startDatetimeEpoch=startDatetime,
-    maxEndDatetimeEpoch=100 * 3600 + startDatetime,
-    minDownTime=1 * 3600,
-)
+        dataset,
+        maxConnectingFlights = 3,
+        maxDownTime = 24 * 3600,
+        startAirport = startAirport,
+        endAirport = endAirport,
+        startDatetimeEpoch = startDatetime,
+        maxEndDatetimeEpoch = 48 * 3600 + startDatetime,
+        minDownTime = 1 * 3600,
+    )
     return possibleRoutes
+
 
 # Function to get actual journeys from the possible routes
 # Returns a list of Journey objects (journeyID, flights, availableSeats)
@@ -270,7 +261,10 @@ def getJourneys(possibleRoutes):
     def getAvailableSeats(scheduleID, departureDate):
         seatsAvailable = []
         for seat in seatAvailabilityDataObjects:
-            if scheduleID == seat.scheduleID and departureDate.strftime("%m/%d/%Y") == seat.departureDate:
+            if (
+                scheduleID == seat.scheduleID
+                and departureDate.date() == seat.departureDate.date()
+            ):
                 seatsAvailable = [
                     ("fc", seat.fcAvailable),
                     ("bc", seat.bcAvailable),
@@ -322,40 +316,16 @@ def getJourneys(possibleRoutes):
 
     return actualJourneys
 
+
 def getActualJourneys(scheduleID, departureDate):
-    possibleRoutes = getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate)
+    possibleRoutes = getPossibleRoutesUsingScheduleIDAndDepDate(
+        scheduleID, departureDate
+    )
     actualJourneys = getJourneys(possibleRoutes)
     return actualJourneys
 
+affectedPassengers = getAffectedPassengers("SCH-ZZ-3400127", datetime(2024, 5, 6))
+actualJourneys = getActualJourneys("SCH-ZZ-3400127", datetime(2024, 5, 6))
 
-"""
-def scheduleIDToEpochs(scheduleID,departureDate):
-    Epochs = [] #returns epochs at index0- departure and at index1- arrival 
-    for schedule in scheduleDataObjects:
-        if schedule.scheduleID == scheduleID:
-            index = 0
-            for i in range(len(schedule.departureEpochs)):
-                if schedule.departureDateTimes[i] == departureDate:
-                    index = i
-                    break
-            Epochs.append(schedule.departureEpochs[index])
-            Epochs.append(int(schedule.departureEpochs[index])+schedule.duration)
-    return Epochs[0],Epochs[1]
-"""
-# Epoch = scheduleIDToEpochs("SCH-ZZ-0000030",datetime(2024,8,20))
-# print(Epoch)
-affectedPassengers = getAffectedPassengers("SCH-ZZ-0000030", datetime(2024, 8, 20))
-"""
-print(affectedPassengers[0].connectingFlights)
-for booking in bookingPNRDataObjects:
-    print(booking.recloc , booking.departureDTMZEpoch)
-print(bookingPNRDataObjects[1].departureDTMZEpoch)
-print(len(bookingPNRDataObjects))
-print("affectedPassengers:",affectedPassengers[0].recloc)
-print("possibleRoutes:", possibleRoutes)
-print(datetime(2024,8,20,0,0))
-"""
-
-actualJourneys = getActualJourneys("SCH-ZZ-0000030", datetime(2024, 8, 20))
-for journey in actualJourneys:
-    print(journey.journeyID, journey.flights, journey.availableSeats)
+print(affectedPassengers)
+print(actualJourneys)

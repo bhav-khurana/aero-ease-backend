@@ -3,6 +3,7 @@ class PNRPassenger:
         self,
         recloc,
         creationDate,
+        customerID,
         lastName,
         firstName,
         nationality,
@@ -13,9 +14,11 @@ class PNRPassenger:
         specialNameCode1,
         specialNameCode2,
         ssr,
+        loyalty,
     ):
         self.recloc = recloc
         self.creationDate = creationDate
+        self.customerID = customerID
         self.lastName = lastName
         self.firstName = firstName
         self.nationality = nationality
@@ -26,3 +29,4 @@ class PNRPassenger:
         self.specialNameCode1 = specialNameCode1
         self.specialNameCode2 = specialNameCode2
         self.ssr = ssr
+        self.loyalty = loyalty

@@ -3,7 +3,6 @@ class PNR:
         self,
         recloc,
         ssr=None,
-        cabinData=None,
         classData=None,
         connectingFlights=None,
         paidServices=None,
@@ -13,7 +12,6 @@ class PNR:
     ):
         self.recloc = recloc
         self.ssr = ssr
-        self.cabinData = cabinData
         self.classData = classData
         self.connectingFlights = connectingFlights
         self.paidServices = paidServices
@@ -23,8 +21,8 @@ class PNR:
     
     def __repr__(self):
         return (
-            f"PNR(recloc={self.recloc}, ssr={self.ssr}, cabinData={self.cabinData}, "
+            f"PNR(recloc={self.recloc}, ssr={self.ssr}, "
             f"classData={self.classData}, connectingFlights={self.connectingFlights}, "
             f"paidServices={self.paidServices}, bookingType={self.bookingType}, "
-            f"noPAX={self.noPAX}, loyalty={self.loyalty})    "
+            f"noPAX={self.noPAX}, loyalty={self.loyalty})   \n\n "
         )

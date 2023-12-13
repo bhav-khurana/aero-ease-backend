@@ -275,7 +275,22 @@ def solutionGenerator(journeys, pnrs, weights):
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
     print(c)
-    print(solveFlightSchedule(obj).first.sample)
-
-
+    solution = solveFlightSchedule(obj).first.sample
+    passengerFlights = {} # key: passenger PNR, value: Journey(id, flights, availableSeats)
+    for i in range(len(pnrs)):
+        passengerFlights[pnrs[i].recloc] = None
+        for j in range(len(journeys)):
+            if solution[f"x{i}_{j}"] == 1:
+                passengerFlights[pnrs[i].recloc] = journeys[j]
+                break
+            
+    flightPassengers = {} # key: flight, value: list of passenger PNRs
+    for i in range(len(journeys)):
+        flightPassengers[journeys[i].flights[0][0]] = []
+        for j in range(len(pnrs)):
+            if solution[f"x{j}_{i}"] == 1:
+                flightPassengers[journeys[i].flights[0][0]].append(pnrs[j].recloc)
+    
+    return flightPassengers
+    
 solutionGenerator(actualJourneys, affectedPassengers, currentWeights)

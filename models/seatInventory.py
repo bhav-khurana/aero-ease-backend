@@ -3,6 +3,7 @@ class SeatInventory:
         self,
         inventoryID,
         scheduleID,
+        departureKey,
         flightNo,
         departureDate,
         arrivalDate,
@@ -20,6 +21,7 @@ class SeatInventory:
     ):
         self.inventoryID = inventoryID
         self.scheduleID = scheduleID
+        self.departureKey = departureKey
         self.flightNo = flightNo
         self.departureDate = departureDate
         self.arrivalDate = arrivalDate

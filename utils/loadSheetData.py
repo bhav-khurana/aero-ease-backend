@@ -10,12 +10,10 @@ import pnrBooking, pnrPassenger, schedule, seatInventory
 absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
 
-scheduleFileName = "schedule-out.csv"
-bookingPNRFileName = "pnr-out.csv"
-passengerPNRFileName = "people-out.csv"
-seatAvailabilityFileName = "seating-out.csv"
-# pnr-out - pnr-out.csv.csv
-# people-out - people-out.csv.csv
+scheduleFileName = "SCH-ZZ-20231208_035117.csv"
+bookingPNRFileName = "PNRB-ZZ-20231208_062017.csv"
+passengerPNRFileName = "PNRP-ZZ-20231208_111136.csv"
+seatAvailabilityFileName = "INV-ZZ-20231208_041852.csv"
 
 scheduleFilePath = os.path.join(absolutePath, "..", dataDirectory, scheduleFileName)
 bookingPNRFilePath = os.path.join(absolutePath, "..", dataDirectory, bookingPNRFileName)
@@ -59,7 +57,7 @@ for index, row in bookingPNRData.iterrows():
             row["CREATION_DTZ"],
             row["DEP_KEY"],
             row["ACTION_CD"],
-            row["COS_CD"],
+            row["COS_CD"], # FirstClass, etc.
             row["SEG_SEQ"],
             row["PAX_CNT"],
             row["CARRIER_CD"],
@@ -81,6 +79,7 @@ for index, row in passengerPNRData.iterrows():
         pnrPassenger.PNRPassenger(
             row["RECLOC"],
             row["CREATION_DTZ"],
+            row["CUSTOMER_ID"],
             row["LAST_NAME"],
             row["FIRST_NAME"],
             row["NATIONALITY"],
@@ -91,6 +90,7 @@ for index, row in passengerPNRData.iterrows():
             row["SPECIAL_NAME_CD1"],
             row["SPECIAL_NAME_CD2"],
             row["SSR_CODE_CD1"],
+            row["TierLevel"]
         )
     )
 
@@ -100,9 +100,10 @@ for index, row in seatAvailabilityData.iterrows():
         seatInventory.SeatInventory(
             row["InventoryId"],
             row["ScheduleId"],
+            row["Dep_Key"],
             row["FlightNumber"],
-            row["DepartureDate"],
-            row["ArrivalDate"],
+            datetime.strptime(row["DepartureDate"], '%m/%d/%Y'),
+            datetime.strptime(row["ArrivalDateTime"], '%Y-%m-%d %H:%M:%S'),
             row["DepartureAirport"],
             row["ArrivalAirport"],
             row["AvailableInventory"],

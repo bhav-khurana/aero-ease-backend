@@ -8,7 +8,7 @@ from flask import request
 class AvailableFlights(Resource):
     def get(self):
         excelDataFrame = pandas.read_csv(
-            "./data/schedule.csv"
+            "./data/SCH-ZZ-20231208_035117.csv"
         )
         jsonData = json.loads(excelDataFrame.to_json(orient="records"))
 

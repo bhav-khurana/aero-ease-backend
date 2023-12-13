@@ -11,5 +11,5 @@ class Journey:
         )
         return (
             f"Journey(journeyID={self.journeyID}, flights=[{flights_repr}], "
-            f"availableSeats={self.availableSeats})"
+            f"availableSeats={self.availableSeats}) \n\n"
         )
