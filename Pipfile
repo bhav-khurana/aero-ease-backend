@@ -7,6 +7,7 @@ name = "pypi"
 flask-restful = "*"
 pandas = "*"
 flask-cors = "*"
+dwave-ocean-sdk = "*"
 
 [dev-packages]
 

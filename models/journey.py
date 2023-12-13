@@ -13,3 +13,10 @@ class Journey:
             f"Journey(journeyID={self.journeyID}, flights=[{flights_repr}], "
             f"availableSeats={self.availableSeats}) \n\n"
         )
+
+    def to_dict(self):
+        return {
+            "journeyID": self.journeyID,
+            "flights": self.flights,
+            "availableSeats": self.availableSeats,
+        }

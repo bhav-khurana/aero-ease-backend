@@ -3,7 +3,9 @@ import flask
 import json
 from flask_restful import Resource
 from flask import request
-
+from endpoints.ruleSet import RuleSet
+from utils.universalFunction import universalFunction
+from datetime import datetime
 
 class AvailableFlights(Resource):
     def get(self):
@@ -16,13 +18,14 @@ class AvailableFlights(Resource):
 
     def delete(self):
         data = json.loads(request.data)
-        print(data)
         cancelledFlights = []
         for flight in data:
-            cancelledFlights.append((flight["scheduleID"], flight["date"]))
+            cancelledFlights.append((flight["scheduleID"], datetime.strptime(flight["date"], "%m/%d/%Y")))
         
         # TODO: call the main function    
+        print("ruleSet: ", RuleSet.ruleset)
+        solution = universalFunction(cancelledFlights, json.loads(RuleSet.ruleset))
         
         # TODO: generate solution from data
-        response = flask.jsonify({"message": "ok"})
+        response = flask.jsonify(solution)
         return response

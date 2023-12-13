@@ -1,9 +1,9 @@
-from journeyGeneration import (
+from utils.journeyGeneration import (
     getActualJourneys,
     getAffectedPassengers,
 )
 
-from solutionGenerator import (
+from utils.solutionGenerator import (
     solutionGenerator,
 )
 
@@ -11,7 +11,6 @@ class Weights:
     def __init__(
         self,
         ssrWeights,
-        cabinWeights,
         classWeights,
         connectingFlightsWeight,
         paidServicesWeight,
@@ -25,7 +24,6 @@ class Weights:
         arrivalDiffWeights,
     ):
         self.ssrWeights = ssrWeights
-        self.cabinWeights = cabinWeights
         self.classWeights = classWeights
         self.connectingFlightsWeight = connectingFlightsWeight
         self.paidServicesWeight = paidServicesWeight
@@ -39,8 +37,8 @@ class Weights:
         self.arrivalDiffWeights = arrivalDiffWeights
 
 def jsonToWeights(jsonData):
+    print(jsonData["pnrRankingRules"]["ssr"])
     ssrWeights = {item["type"]: item["value"] if item["enabled"] else 0 for item in jsonData["pnrRankingRules"]["ssr"]}
-    cabinWeights = {item["cabin"]: item["value"] if item["enabled"] else 0 for item in jsonData["pnrRankingRules"]["cabin"]}
     classWeights = {item["class"]: item["value"] if item["enabled"] else 0 for item in jsonData["pnrRankingRules"]["class"]}
     connectingFlightsWeight = jsonData["pnrRankingRules"]["other"][0]["value"] if jsonData["pnrRankingRules"]["other"][0]["enabled"] else 0
     paidServicesWeight = jsonData["pnrRankingRules"]["other"][1]["value"] if jsonData["pnrRankingRules"]["other"][1]["enabled"] else 0
@@ -55,7 +53,6 @@ def jsonToWeights(jsonData):
 
     return Weights(
         ssrWeights,
-        cabinWeights,
         classWeights,
         connectingFlightsWeight,
         paidServicesWeight,
@@ -213,7 +210,6 @@ jsonData = {
 
 def printWeights(weights):
     print("SSR Weights:", weights.ssrWeights)
-    print("Cabin Weights:", weights.cabinWeights)
     print("Class Weights:", weights.classWeights)
     print("Connecting Flights Weight:", weights.connectingFlightsWeight)
     print("Paid Services Weight:", weights.paidServicesWeight)
@@ -245,10 +241,13 @@ def getCombinedActualJourneys(scheduleDatetimeTuples):
 
 
 def universalFunction(scheduleDatetimeTuples, jsonData):
+  
+    # TODO: change the status of the cancelled flights in the database
+    
     weights = jsonToWeights(jsonData)
     affectedPassengers = getCombinedAffectedPassengers(scheduleDatetimeTuples)
     actualJourneys = getCombinedActualJourneys(scheduleDatetimeTuples)
-
+    printWeights(weights)
     solution = solutionGenerator(
         actualJourneys,
         affectedPassengers,

@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 import sys, os
 from dateutil import parser
-from loadSheetData import (
+from utils.loadSheetData import (
     scheduleDataObjects,
     bookingPNRDataObjects,
     seatAvailabilityDataObjects,
@@ -115,6 +115,8 @@ def getAffectedPassengers(scheduleID, departureDate):
             if pnrObject.recloc == booking.recloc:
                 pnrObject.noPAX = booking.paxCount
                 pnrObject.classData = booking.classCode
+                pnrObject.originalScheduleID = scheduleID
+                pnrObject.originalDepartureDate = departureDate
                 break
 
     bookingPNRDataObjects.sort(key=lambda x: x.departureDTMLEpoch)
@@ -324,8 +326,3 @@ def getActualJourneys(scheduleID, departureDate):
     actualJourneys = getJourneys(possibleRoutes)
     return actualJourneys
 
-affectedPassengers = getAffectedPassengers("SCH-ZZ-3400127", datetime(2024, 5, 6))
-actualJourneys = getActualJourneys("SCH-ZZ-3400127", datetime(2024, 5, 6))
-
-print(affectedPassengers)
-print(actualJourneys)

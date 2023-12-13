@@ -2,6 +2,8 @@ class PNR:
     def __init__(
         self,
         recloc,
+        originalScheduleID = None,
+        originalDepartureDate = None,
         ssr=None,
         classData=None,
         connectingFlights=None,
@@ -11,6 +13,8 @@ class PNR:
         loyalty=None,
     ):
         self.recloc = recloc
+        self.originalScheduleID = originalScheduleID
+        self.originalDepartureDate = originalDepartureDate
         self.ssr = ssr
         self.classData = classData
         self.connectingFlights = connectingFlights

@@ -12,26 +12,15 @@ sys.path.append(
 )
 import journey, pnr
 
-from journeyGeneration import (
-    actualJourneys,
-    affectedPassengers,
-)
-
-from loadSheetData import (
+from utils.loadSheetData import (
     scheduleDataObjects,
     bookingPNRDataObjects,
     seatAvailabilityDataObjects,
     passengerPNRDataObjects,
 )
 
-print("Actual journeys: ", actualJourneys)
-print("Actual passengers: ", affectedPassengers)
-
 upgradesAllowed = False
 downgradesAllowed = False
-originalScheduleID = "SCH-ZZ-0000030"
-originalDepartureDate = datetime(2024, 8, 20)
-
 
 class Weights:
     def __init__(
@@ -91,7 +80,7 @@ ssrWeights = {
     " NRSA": 200,
 }
 cabinWeights = {"fc": 1500, "bc": 1500, "pc": 1500, "ec": 1500,}
-classWeights = {letter: 800 for letter in string.ascii_uppercase}
+classWeights = {"FirstClass": 1500, "BusinessClass": 1500, "PremiumEconomyClass": 1500, "EconomyClass": 1500,}
 connectingFlightsWeight = 100
 paidServicesWeight = 200
 bookingTypeWeight = 500
@@ -123,19 +112,18 @@ currentWeights = Weights(
 def ssrCalculator(pnr, ssrWeights):
     sum = 0
     for i in range(len(pnr.ssr)):
-        sum += ssrWeights[pnr.ssr[i]]
+        try:
+            sum += ssrWeights[pnr.ssr[i]]
+        except:
+            print("Invalid SSR")
     return sum
 
 def cabinAssigner(classData):
-    classData = classData.upper()    
     cabin_mapping = {
-        'A': 'fc', 'B': 'bc', 'C': 'pc', 'D': 'ec',
-        'E': 'fc', 'F': 'bc', 'G': 'pc', 'H': 'ec',
-        'I': 'fc', 'J': 'bc', 'K': 'pc', 'L': 'ec',
-        'M': 'fc', 'N': 'bc', 'O': 'pc', 'P': 'ec',
-        'Q': 'fc', 'R': 'bc', 'S': 'pc', 'T': 'ec',
-        'U': 'fc', 'V': 'bc', 'W': 'pc', 'X': 'ec',
-        'Y': 'fc', 'Z': 'bc',
+        'FirstClass': 'fc',
+        'BusinessClass': 'bc',
+        'PremiumEconomyClass': 'pc',
+        'EconomyClass': 'ec',
     }
     return cabin_mapping.get(classData, 'Invalid classData')
 
@@ -170,8 +158,7 @@ def coefficientCalculator(journey, pnr, weights):
             print("oye cabin data match nhi ho rha")
             sum -= 10000
         else:
-            sum += weights.cabinWeights[cabinAssigner(pnr.classData)]
-    sum += weights.classWeights[pnr.classData]
+            sum += weights.classWeights[pnr.classData]
     sum += weights.connectingFlightsWeight * pnr.connectingFlights
     # sum += weights.paidServicesWeight * pnr.paidServices
     # sum += weights.bookingTypeWeight * pnr.bookingType
@@ -194,7 +181,7 @@ def coefficientCalculator(journey, pnr, weights):
     )
     print("--------------------")
     originalDeparture, originalArrival = scheduleIDToEpochs(
-        originalScheduleID, originalDepartureDate
+        pnr.originalScheduleID, pnr.originalDepartureDate
     )
     print("--------------------")
     if overallDeparture < originalDeparture:
@@ -274,23 +261,15 @@ def solutionGenerator(journeys, pnrs, weights):
     obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
-    print(c)
     solution = solveFlightSchedule(obj).first.sample
     passengerFlights = {} # key: passenger PNR, value: Journey(id, flights, availableSeats)
     for i in range(len(pnrs)):
         passengerFlights[pnrs[i].recloc] = None
         for j in range(len(journeys)):
             if solution[f"x{i}_{j}"] == 1:
-                passengerFlights[pnrs[i].recloc] = journeys[j]
+                passengerFlights[pnrs[i].recloc] = journeys[j].to_dict()
                 break
-            
-    flightPassengers = {} # key: flight, value: list of passenger PNRs
-    for i in range(len(journeys)):
-        flightPassengers[journeys[i].flights[0][0]] = []
-        for j in range(len(pnrs)):
-            if solution[f"x{j}_{i}"] == 1:
-                flightPassengers[journeys[i].flights[0][0]].append(pnrs[j].recloc)
     
-    return flightPassengers
+    return passengerFlights
     
-solutionGenerator(actualJourneys, affectedPassengers, currentWeights)
+# solutionGenerator(actualJourneys, affectedPassengers, currentWeights)
