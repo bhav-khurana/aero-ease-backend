@@ -258,24 +258,21 @@ def solveFlightSchedule(obj):
     cqm.set_objective(obj)
     cqmSampler = LeapHybridCQMSampler()
     cqmAnswer = cqmSampler.sample_cqm(cqm)
-    df = cqmAnswer.to_pandas_dataframe()
-    df.sort_values("energy")
-    print(df)
-    solutions = []
-    for i in range(num_of_solutions):
-        solution = df.iloc[i]
-        solution = solution.to_dict()
-        solutions.append(solution)
-        
-    print(solutions)
-    
-    return solutions
+
+    solutionsList = cqmAnswer.samples(n=10, sorted_by='energy')
+    print(solutionsList)
+    print(type(solutionsList[0]))
+    for solution in solutionsList:
+        print(solution)
+        print(type(solution))
+    return solutionsList
 
 
 def solutionGenerator(journeys, pnrs, weights):
     obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
+     # list of all solutions
     solutions = solveFlightSchedule(obj)
     passengerFlights = [] # list of key: passenger PNR, value: Journey(id, flights, availableSeats)
     for num in range(num_of_solutions):
@@ -286,6 +283,7 @@ def solutionGenerator(journeys, pnrs, weights):
                 if solutions[num][f"x{i}_{j}"] == 1:
                     passengerFlights[num][pnrs[i].recloc] = journeys[j].to_dict()
                     break
+
     
     return passengerFlights
     
