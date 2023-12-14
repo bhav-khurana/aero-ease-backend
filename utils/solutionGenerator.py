@@ -1,12 +1,13 @@
 import os
 import sys
 import random
-from dimod import BinaryQuadraticModel, Binary
-from dwave.system import LeapHybridBQMSampler
+from dimod import BinaryQuadraticModel, Binary, ConstrainedQuadraticModel
+from dwave.system import LeapHybridBQMSampler, LeapHybridCQMSampler
 import numpy as np
 from datetime import datetime
 import string
 
+num_of_solutions = 5
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 )
@@ -252,23 +253,39 @@ def addLinearInequalityConstraints(obj, journeys, pnrs):
 
 
 def solveFlightSchedule(obj):
-    bqm_sampler = LeapHybridBQMSampler()
-    bqm_answer = bqm_sampler.sample(obj)
-    return bqm_answer
+    
+    cqm = ConstrainedQuadraticModel()
+    cqm.set_objective(obj)
+    cqmSampler = LeapHybridCQMSampler()
+    cqmAnswer = cqmSampler.sample_cqm(cqm)
+    df = cqmAnswer.to_pandas_dataframe()
+    df.sort_values("energy")
+    print(df)
+    solutions = []
+    for i in range(num_of_solutions):
+        solution = df.iloc[i]
+        solution = solution.to_dict()
+        solutions.append(solution)
+        
+    print(solutions)
+    
+    return solutions
 
 
 def solutionGenerator(journeys, pnrs, weights):
     obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
-    solution = solveFlightSchedule(obj).first.sample
-    passengerFlights = {} # key: passenger PNR, value: Journey(id, flights, availableSeats)
-    for i in range(len(pnrs)):
-        passengerFlights[pnrs[i].recloc] = None
-        for j in range(len(journeys)):
-            if solution[f"x{i}_{j}"] == 1:
-                passengerFlights[pnrs[i].recloc] = journeys[j].to_dict()
-                break
+    solutions = solveFlightSchedule(obj)
+    passengerFlights = [] # list of key: passenger PNR, value: Journey(id, flights, availableSeats)
+    for num in range(num_of_solutions):
+        passengerFlights.append({})
+        for i in range(len(pnrs)):
+            passengerFlights[num][pnrs[i].recloc] = None
+            for j in range(len(journeys)):
+                if solutions[num][f"x{i}_{j}"] == 1:
+                    passengerFlights[num][pnrs[i].recloc] = journeys[j].to_dict()
+                    break
     
     return passengerFlights
     

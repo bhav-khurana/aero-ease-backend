@@ -101,38 +101,16 @@ def getCombinedAffectedPassengers(scheduleDatetimeTuples):
 def getCombinedActualJourneys(scheduleDatetimeTuples):
     combinedActualJourneys = []
     for scheduleID, datetime in scheduleDatetimeTuples:
-        actualJourneys = getActualJourneys(scheduleID, datetime)
+        actualJourneys = getActualJourneys(scheduleID, datetime, scheduleDatetimeTuples)
         combinedActualJourneys.extend(actualJourneys)
     return combinedActualJourneys
 
 
 def universalFunction(scheduleDatetimeTuples, jsonData):
-  
-    # TODO: change the status of the cancelled flights in the database
-    # [(scheduleID, datetime)]
-    df = pd.read_csv(scheduleFilePath)
-    for scheduleID, date in scheduleDatetimeTuples:
-        for index, row in df.iterrows():
-            if row["ScheduleID"] == scheduleID:
-                dates = row["DepartureDates"][1:-1].split(", ")
-                for i in range(len(dates)):
-                  if (dates[i] == "'Cancelled'"):
-                    dates[i] = 'Cancelled'
-                    continue
-                  tmpDate = dates[i]
-                  tmpDate = datetime.strptime(tmpDate[1:-1], '%m/%d/%Y')
-                  if tmpDate.date() == date.date():
-                    dates[i] = 'Cancelled'
-                  else:
-                    dates[i] = dates[i][1:-1]
-                dates = str(dates)
-                df.loc[index, "DepartureDates"] = dates
-    df.to_csv(scheduleFilePath, index=False)
     
     weights = jsonToWeights(jsonData)
     affectedPassengers = getCombinedAffectedPassengers(scheduleDatetimeTuples)
     actualJourneys = getCombinedActualJourneys(scheduleDatetimeTuples)
-    printWeights(weights)
     solution = solutionGenerator(
         actualJourneys,
         affectedPassengers,

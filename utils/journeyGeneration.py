@@ -35,7 +35,7 @@ for schedule in scheduleDataObjects:
     # Convert each date string to a datetime object and add to the list
     for dateString in dateList:
         dateString = dateString.strip()
-        if dateString != "" and dateString != "'Cancelled'":
+        if dateString != "":
             dateTimeObjList.append(datetime.strptime(dateString[1:-1], "%m/%d/%Y"))
 
     # Assume schedule.departureTime is a time object associated with the schedule
@@ -218,7 +218,7 @@ def getPossibleRoutes(
     return result
 
 
-def getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate):
+def getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate, scheduleDatetimeTuples):
     dataset = []
     startAirport = ""
     endAirport = ""
@@ -226,15 +226,16 @@ def getPossibleRoutesUsingScheduleIDAndDepDate(scheduleID, departureDate):
     for schedule in scheduleDataObjects:
         if schedule.status == "Scheduled":
             for i in range(len(schedule.departureEpochs)):
-                dataset.append(
-                    (
-                        schedule.scheduleID,
-                        schedule.departureAirport,
-                        schedule.arrivalAirport,
-                        schedule.departureEpochs[i],
-                        schedule.duration,
+                if (schedule.scheduleID, schedule.departureDateTimes[i]) not in scheduleDatetimeTuples:
+                    dataset.append(
+                        (
+                            schedule.scheduleID,
+                            schedule.departureAirport,
+                            schedule.arrivalAirport,
+                            schedule.departureEpochs[i],
+                            schedule.duration,
+                        )
                     )
-                )
                 if (
                     schedule.scheduleID == scheduleID
                     and schedule.departureDateTimes[i] == departureDate
@@ -319,9 +320,9 @@ def getJourneys(possibleRoutes):
     return actualJourneys
 
 
-def getActualJourneys(scheduleID, departureDate):
+def getActualJourneys(scheduleID, departureDate, scheduleDatetimeTuples):
     possibleRoutes = getPossibleRoutesUsingScheduleIDAndDepDate(
-        scheduleID, departureDate
+        scheduleID, departureDate, scheduleDatetimeTuples
     )
     actualJourneys = getJourneys(possibleRoutes)
     return actualJourneys
