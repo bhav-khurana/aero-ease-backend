@@ -51,8 +51,8 @@ def jsonToWeights(jsonData):
     connectingFlightsWeight = jsonData["pnrRankingRules"]["other"][0]["value"] if jsonData["pnrRankingRules"]["other"][0]["enabled"] else 0
     paidServicesWeight = jsonData["pnrRankingRules"]["other"][1]["value"] if jsonData["pnrRankingRules"]["other"][1]["enabled"] else 0
     bookingTypeWeight = jsonData["pnrRankingRules"]["other"][2]["value"] if jsonData["pnrRankingRules"]["other"][2]["enabled"] else 0
-    noPAXWeight = jsonData["pnrRankingRules"]["other"][3]["value"] if jsonData["pnrRankingRules"]["other"][3]["enabled"] else 0
-    loyaltyWeight = jsonData["pnrRankingRules"]["other"][4]["value"] if jsonData["pnrRankingRules"]["other"][4]["enabled"] else 0
+    noPAXWeight = jsonData["pnrRankingRules"]["other"][4]["value"] if jsonData["pnrRankingRules"]["other"][4]["enabled"] else 0
+    loyaltyWeight = jsonData["pnrRankingRules"]["other"][3]["value"] if jsonData["pnrRankingRules"]["other"][3]["enabled"] else 0
     stopoverWeight = jsonData["flightRankingRules"]["general"][0]["score"] if jsonData["flightRankingRules"]["general"][0]["enabled"] else 0
     sameEquipmentWeight = jsonData["flightRankingRules"]["general"][1]["score"] if jsonData["flightRankingRules"]["general"][1]["enabled"] else 0
     departureDiffWeights = [item["score"] if item["enabled"] else 0 for item in jsonData["flightRankingRules"]["std"]]

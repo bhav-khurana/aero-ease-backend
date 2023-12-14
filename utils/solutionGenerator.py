@@ -142,36 +142,78 @@ def scheduleIDToEpochs(scheduleID, departureDate):
             arrivalEpoch = departureEpoch + schedule.duration
     return departureEpoch, arrivalEpoch
 
+def scheduleIDToAirportsAndAircraft(scheduleID, departureDate):
+    departureAirport = ""
+    arrivalAirport = ""
+    aircraft = ""
+    for schedule in scheduleDataObjects:
+        if schedule.scheduleID == scheduleID:
+            departureAirport = schedule.departureAirport
+            arrivalAirport = schedule.arrivalAirport
+            aircraft = schedule.aircraftTailNo
+    return departureAirport, arrivalAirport, aircraft
+
+def classRankAssigner(classData):
+    rankMapping = {
+        'fc': 1,
+        'bc': 2,
+        'pc': 3,
+        'ec': 4,
+    }
+    return rankMapping.get(classData, 'Invalid classData')
+
+def loyaltyMapper(loyalty):
+    loyalty_mapping = {
+        'Silver': 1,
+        'Gold': 2,
+        'Platinum': 3,
+        'nan': 0,
+    }
+    return loyalty_mapping.get(loyalty, 'Invalid loyalty')
 
 def coefficientCalculator(journey, pnr, weights):
     sum = 0
+    journeyDepartureAirport, _, _ = scheduleIDToAirportsAndAircraft(journey.flights[0][0], journey.flights[0][2])
+    _, journeyArrivalAirport, _ = scheduleIDToAirportsAndAircraft(journey.flights[-1][0], journey.flights[-1][2])
+    originalDepartureAirport, originalArrivalAirport, originalAircraft = scheduleIDToAirportsAndAircraft(pnr.originalScheduleID, pnr.originalDepartureDate)
+    if journeyDepartureAirport != originalDepartureAirport or journeyArrivalAirport != originalArrivalAirport:
+        sum -= 10000
     sum += ssrCalculator(pnr, weights.ssrWeights)
     if upgradesAllowed and downgradesAllowed:
-        sum += weights.cabinWeights[cabinAssigner(pnr.classData)]
+        pass
     elif upgradesAllowed:
-        # TODO: Add code for upgrades
-        pass
+        if classRankAssigner(journey.availableSeats[0]) < classRankAssigner(cabinAssigner(pnr.classData)):
+            pass
+        else:
+            sum -= 10000
     elif downgradesAllowed:
-        # TODO: Add code for downgrades
-        pass
+        if classRankAssigner(journey.availableSeats[0]) > classRankAssigner(cabinAssigner(pnr.classData)):
+            pass
+        else:
+            sum -= 10000
     else:
         if journey.availableSeats[0] != cabinAssigner(pnr.classData):
             print("oye cabin data match nhi ho rha")
             sum -= 10000
         else:
-            sum += weights.classWeights[pnr.classData]
+            pass
+    if journey.availableSeats[0] == cabinAssigner(pnr.classData):
+        sum += weights.classWeights[pnr.classData]
     sum += weights.connectingFlightsWeight * pnr.connectingFlights
-    # sum += weights.paidServicesWeight * pnr.paidServices
-    # sum += weights.bookingTypeWeight * pnr.bookingType
     sum += weights.noPAXWeight * pnr.noPAX
-    # sum += weights.loyaltyWeight * pnr.loyalty
+    loyaltyScore = 0
+    for loyalty in pnr.loyalty:
+        try:
+            loyaltyScore = max(weights.loyaltyWeight * loyaltyMapper(loyalty), loyaltyScore)
+        except:
+            print("Invalid loyalty")
+    sum += loyaltyScore
     if journey.availableSeats[1] < pnr.noPAX:
         print("oye seats hi nhi hai")
         sum -= 10000
     if len(journey.flights) > 1:
         sum += weights.stopoverWeight * (len(journey.flights) - 1)
-    # TODO: Add code for same equipment
-    # TODO: Add code for city pair
+    
     print("--------------------")
     overallDeparture, _ = scheduleIDToEpochs(
         journey.flights[0][0], journey.flights[0][2]
@@ -212,6 +254,9 @@ def coefficientCalculator(journey, pnr, weights):
     else:
         print("oye aur late ho gya")
         sum -= 10000
+    _, _, journeyAircraft = scheduleIDToAirportsAndAircraft(journey.flights[0][0], journey.flights[0][2])
+    if originalAircraft == journeyAircraft:
+        sum += weights.sameEquipmentWeight
     return sum
 
 
