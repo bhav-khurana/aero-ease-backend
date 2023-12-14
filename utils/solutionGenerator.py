@@ -303,13 +303,7 @@ def solveFlightSchedule(obj):
     cqm.set_objective(obj)
     cqmSampler = LeapHybridCQMSampler()
     cqmAnswer = cqmSampler.sample_cqm(cqm)
-
-    solutionsList = cqmAnswer.samples(n=10, sorted_by='energy')
-    print(solutionsList)
-    print(type(solutionsList[0]))
-    for solution in solutionsList:
-        print(solution)
-        print(type(solution))
+    solutionsList = cqmAnswer.samples(n = num_of_solutions, sorted_by = 'energy')
     return solutionsList
 
 
@@ -321,7 +315,7 @@ def solutionGenerator(journeys, pnrs, weights):
     solutions = solveFlightSchedule(obj)
     passengerFlights = [] # list of key: passenger PNR, value: Journey(id, flights, availableSeats)
     for num in range(num_of_solutions):
-        passengerFlights.append({})
+        passengerFlights.append({"solution_no": num + 1})
         for i in range(len(pnrs)):
             passengerFlights[num][pnrs[i].recloc] = None
             for j in range(len(journeys)):
@@ -329,7 +323,6 @@ def solutionGenerator(journeys, pnrs, weights):
                     passengerFlights[num][pnrs[i].recloc] = journeys[j].to_dict()
                     break
 
-    
     return passengerFlights
     
 # solutionGenerator(actualJourneys, affectedPassengers, currentWeights)

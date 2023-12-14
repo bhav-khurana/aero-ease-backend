@@ -21,11 +21,10 @@ class AvailableFlights(Resource):
         cancelledFlights = []
         for flight in data:
             cancelledFlights.append((flight["scheduleID"], datetime.strptime(flight["date"], "%m/%d/%Y")))
-        
-        # TODO: call the main function    
+          
         print("ruleSet: ", RuleSet.ruleset)
         solution = universalFunction(cancelledFlights, json.loads(RuleSet.ruleset))
         
-        # TODO: generate solution from data
+        # generate solution from data
         response = flask.jsonify(solution)
         return response
