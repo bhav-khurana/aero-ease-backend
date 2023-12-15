@@ -20,9 +20,6 @@ from utils.loadSheetData import (
     passengerPNRDataObjects,
 )
 
-upgradesAllowed = False
-downgradesAllowed = False
-
 class Weights:
     def __init__(
         self,
@@ -171,7 +168,7 @@ def loyaltyMapper(loyalty):
     }
     return loyalty_mapping.get(loyalty, 'Invalid loyalty')
 
-def coefficientCalculator(journey, pnr, weights):
+def coefficientCalculator(journey, pnr, weights, upgradesAllowed, downgradesAllowed):
     sum = 0
     journeyDepartureAirport, _, _ = scheduleIDToAirportsAndAircraft(journey.flights[0][0], journey.flights[0][2])
     _, journeyArrivalAirport, _ = scheduleIDToAirportsAndAircraft(journey.flights[-1][0], journey.flights[-1][2])
@@ -260,7 +257,7 @@ def coefficientCalculator(journey, pnr, weights):
     return sum
 
 
-def generateVariablesAndCoefficients(journeys, pnrs, weights):
+def generateVariablesAndCoefficients(journeys, pnrs, weights, upgradesAllowed, downgradesAllowed):
     x = []
     c = []
     n = 0
@@ -270,7 +267,7 @@ def generateVariablesAndCoefficients(journeys, pnrs, weights):
         for j in range(len(journeys)):
             x.append(Binary(f"x{i}_{j}"))
             c.append(0)
-            c[n] = -coefficientCalculator(journeys[j], pnrs[i], weights)
+            c[n] = -coefficientCalculator(journeys[j], pnrs[i], weights, upgradesAllowed, downgradesAllowed)
             obj.add_variable(f"x{i}_{j}")
             obj.add_linear(f"x{i}_{j}", c[n])
             n += 1
@@ -307,8 +304,8 @@ def solveFlightSchedule(obj):
     return solutionsList
 
 
-def solutionGenerator(journeys, pnrs, weights):
-    obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights)
+def solutionGenerator(journeys, pnrs, weights, upgradesAllowed, downgradesAllowed):
+    obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights, upgradesAllowed, downgradesAllowed)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
      # list of all solutions
