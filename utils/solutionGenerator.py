@@ -1,23 +1,14 @@
 import os
 import sys
-import random
 from dimod import BinaryQuadraticModel, Binary, ConstrainedQuadraticModel
-from dwave.system import LeapHybridBQMSampler, LeapHybridCQMSampler
-import numpy as np
-from datetime import datetime
-import string
+from dwave.system import LeapHybridCQMSampler
 
 num_of_solutions = 5
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 )
-import journey, pnr
-
 from utils.loadSheetData import (
     scheduleDataObjects,
-    bookingPNRDataObjects,
-    seatAvailabilityDataObjects,
-    passengerPNRDataObjects,
 )
 
 class Weights:
@@ -113,7 +104,7 @@ def ssrCalculator(pnr, ssrWeights):
         try:
             sum += ssrWeights[pnr.ssr[i]]
         except:
-            print("Invalid SSR")
+            print("Invalid SSR", pnr.ssr[i])
     return sum
 
 def cabinAssigner(classData):
@@ -177,25 +168,22 @@ def coefficientCalculator(journey, pnr, weights, upgradesAllowed, downgradesAllo
         sum -= 10000
     sum += ssrCalculator(pnr, weights.ssrWeights)
     if upgradesAllowed and downgradesAllowed:
-        pass
+        sum += weights.classWeights[pnr.classData]
     elif upgradesAllowed:
-        if classRankAssigner(journey.availableSeats[0]) < classRankAssigner(cabinAssigner(pnr.classData)):
-            pass
+        if classRankAssigner(journey.availableSeats[0]) <= classRankAssigner(cabinAssigner(pnr.classData)):
+            sum += weights.classWeights[pnr.classData]
         else:
             sum -= 10000
     elif downgradesAllowed:
-        if classRankAssigner(journey.availableSeats[0]) > classRankAssigner(cabinAssigner(pnr.classData)):
-            pass
+        if classRankAssigner(journey.availableSeats[0]) >= classRankAssigner(cabinAssigner(pnr.classData)):
+            sum += weights.classWeights[pnr.classData]
         else:
             sum -= 10000
     else:
         if journey.availableSeats[0] != cabinAssigner(pnr.classData):
-            print("oye cabin data match nhi ho rha")
             sum -= 10000
         else:
-            pass
-    if journey.availableSeats[0] == cabinAssigner(pnr.classData):
-        sum += weights.classWeights[pnr.classData]
+            sum += weights.classWeights[pnr.classData]
     sum += weights.connectingFlightsWeight * pnr.connectingFlights
     sum += weights.noPAXWeight * pnr.noPAX
     loyaltyScore = 0
@@ -203,31 +191,23 @@ def coefficientCalculator(journey, pnr, weights, upgradesAllowed, downgradesAllo
         try:
             loyaltyScore = max(weights.loyaltyWeight * loyaltyMapper(loyalty), loyaltyScore)
         except:
-            print("Invalid loyalty")
+            print("Invalid loyalty", loyalty)
     sum += loyaltyScore
     if journey.availableSeats[1] < pnr.noPAX:
-        print("oye seats hi nhi hai")
         sum -= 10000
     if len(journey.flights) > 1:
         sum += weights.stopoverWeight * (len(journey.flights) - 1)
     
-    print("--------------------")
     overallDeparture, _ = scheduleIDToEpochs(
         journey.flights[0][0], journey.flights[0][2]
     )
-    print("--------------------")
     _, overallArrival = scheduleIDToEpochs(
         journey.flights[-1][0], journey.flights[-1][2]
     )
-    print("--------------------")
     originalDeparture, originalArrival = scheduleIDToEpochs(
         pnr.originalScheduleID, pnr.originalDepartureDate
     )
-    print("--------------------")
     if overallDeparture < originalDeparture:
-        print("overallDeparture: ", overallDeparture)
-        print("originalDeparture: ", originalDeparture)
-        print("oye departure match nhi ho rha")
         sum -= 10000
     elif overallDeparture - originalDeparture <= 6 * 3600:
         sum += departureDiffWeights[0]
@@ -238,7 +218,6 @@ def coefficientCalculator(journey, pnr, weights, upgradesAllowed, downgradesAllo
     elif overallDeparture - originalDeparture <= 48 * 3600:
         sum += departureDiffWeights[3]
     else:
-        print("oye bht late ho gya")
         sum -= 10000
     if overallArrival - originalArrival <= 6 * 3600:
         sum += arrivalDiffWeights[0]
@@ -249,7 +228,6 @@ def coefficientCalculator(journey, pnr, weights, upgradesAllowed, downgradesAllo
     elif overallArrival - originalArrival <= 48 * 3600:
         sum += arrivalDiffWeights[3]
     else:
-        print("oye aur late ho gya")
         sum -= 10000
     _, _, journeyAircraft = scheduleIDToAirportsAndAircraft(journey.flights[0][0], journey.flights[0][2])
     if originalAircraft == journeyAircraft:
@@ -267,7 +245,7 @@ def generateVariablesAndCoefficients(journeys, pnrs, weights, upgradesAllowed, d
         for j in range(len(journeys)):
             x.append(Binary(f"x{i}_{j}"))
             c.append(0)
-            c[n] = -coefficientCalculator(journeys[j], pnrs[i], weights, upgradesAllowed, downgradesAllowed)
+            c[n] = -(coefficientCalculator(journeys[j], pnrs[i], weights, upgradesAllowed, downgradesAllowed)/1000)*3
             obj.add_variable(f"x{i}_{j}")
             obj.add_linear(f"x{i}_{j}", c[n])
             n += 1
@@ -279,23 +257,22 @@ def addQuadraticConstraints(obj, journeys, pnrs):
     for i in range(len(pnrs)):
         for j in range(len(journeys)):
             for k in range(j + 1, len(journeys)):
-                obj.set_quadratic(f"x{i}_{j}", f"x{i}_{k}", 10000)
+                obj.set_quadratic(f"x{i}_{j}", f"x{i}_{k}", 100)
 
 
 def addLinearInequalityConstraints(obj, journeys, pnrs):
     for j in range(len(journeys)):
-        terms = [(f"x{i}_{j}", 2 * pnrs[i].noPAX) for i in range(len(pnrs))]
+        terms = [(f"x{i}_{j}", pnrs[i].noPAX) for i in range(len(pnrs))]
         obj.add_linear_inequality_constraint(
             terms,
-            lagrange_multiplier=1000,
-            label=f"col_{j}",
-            ub=2 * journeys[j].availableSeats[1],
+            lagrange_multiplier = 10,
+            label = f"col_{j}",
+            ub = journeys[j].availableSeats[1],
         )
         print(journeys[j].availableSeats[0], journeys[j].availableSeats[1])
 
 
 def solveFlightSchedule(obj):
-    
     cqm = ConstrainedQuadraticModel()
     cqm.set_objective(obj)
     cqmSampler = LeapHybridCQMSampler()
@@ -306,6 +283,7 @@ def solveFlightSchedule(obj):
 
 def solutionGenerator(journeys, pnrs, weights, upgradesAllowed, downgradesAllowed):
     obj, c = generateVariablesAndCoefficients(journeys, pnrs, weights, upgradesAllowed, downgradesAllowed)
+    print("coefficients: ", c)
     addQuadraticConstraints(obj, journeys, pnrs)
     addLinearInequalityConstraints(obj, journeys, pnrs)
      # list of all solutions
@@ -321,5 +299,3 @@ def solutionGenerator(journeys, pnrs, weights, upgradesAllowed, downgradesAllowe
                     break
 
     return passengerFlights
-    
-# solutionGenerator(actualJourneys, affectedPassengers, currentWeights)

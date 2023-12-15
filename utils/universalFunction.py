@@ -7,8 +7,6 @@ from utils.solutionGenerator import (
     solutionGenerator,
 )
 import os
-import pandas as pd
-from datetime import datetime
 
 absolutePath = os.path.dirname(__file__)
 dataDirectory = "data"
@@ -45,7 +43,6 @@ class Weights:
         self.arrivalDiffWeights = arrivalDiffWeights
 
 def jsonToWeights(jsonData):
-    print(jsonData["pnrRankingRules"]["ssr"])
     ssrWeights = {item["type"]: item["value"] if item["enabled"] else 0 for item in jsonData["pnrRankingRules"]["ssr"]}
     classWeights = {item["class"]: item["value"] if item["enabled"] else 0 for item in jsonData["pnrRankingRules"]["class"]}
     connectingFlightsWeight = jsonData["pnrRankingRules"]["other"][0]["value"] if jsonData["pnrRankingRules"]["other"][0]["enabled"] else 0
@@ -88,9 +85,6 @@ def printWeights(weights):
     print("Departure Diff Weights:", weights.departureDiffWeights)
     print("Arrival Diff Weights:", weights.arrivalDiffWeights)
 
-# weightsInstance = jsonToWeights(jsonData)
-# printWeights(weightsInstance)
-
 def getCombinedAffectedPassengers(scheduleDatetimeTuples):
     combinedAffectedPassengers = []
     for scheduleID, datetime in scheduleDatetimeTuples:
@@ -107,18 +101,29 @@ def getCombinedActualJourneys(scheduleDatetimeTuples):
 
 
 def universalFunction(scheduleDatetimeTuples, jsonData):
-    upgradesAllowed = jsonData["upgradesAllowed"]
-    downgradesAllowed = jsonData["downgradesAllowed"]
+    upgradesAllowed = jsonData["pnrRankingRules"]["upgradesAllowed"] 
+    downgradesAllowed = jsonData["pnrRankingRules"]["downgradesAllowed"]
+    print(upgradesAllowed, type(upgradesAllowed))
     weights = jsonToWeights(jsonData)
     affectedPassengers = getCombinedAffectedPassengers(scheduleDatetimeTuples)
     actualJourneys = getCombinedActualJourneys(scheduleDatetimeTuples)
-    solution = solutionGenerator(
-        actualJourneys,
-        affectedPassengers,
-        weights,
-        upgradesAllowed,
-        downgradesAllowed,
-    )
+    solution = {}
+    if len(affectedPassengers) == 0:
+        solution = {
+            "message": "no passengers affected"
+        }
+    elif len(actualJourneys) == 0:
+        solution = {
+            "message": "no alternate flights available within 48 hours of the cancelled flight schedule"
+        }
+    else:
+        solution = solutionGenerator(
+            actualJourneys,
+            affectedPassengers,
+            weights,
+            upgradesAllowed,
+            downgradesAllowed,
+        )
 
     return solution
 

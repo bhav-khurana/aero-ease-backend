@@ -82,7 +82,7 @@ def getAffectedPassengers(scheduleID, departureDate):
     for booking in bookingPNRDataObjects:
         if (
             booking.flightNo == flightNo
-            and booking.departureDTMLEpoch == cancelledFlightDepEpoch
+            and booking.departureDTMLEpoch == cancelledFlightDepEpoch and (booking.actionCode == "HK" or booking.actionCode == "GN")
         ):
             bookingsCancelled.append(booking)
 
