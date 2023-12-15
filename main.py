@@ -7,7 +7,7 @@ from endpoints.pnrDetails import PNRDetails
 from endpoints.flightDetails import FlightDetails
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 
 
