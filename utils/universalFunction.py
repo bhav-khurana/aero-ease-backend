@@ -107,7 +107,8 @@ def getCombinedActualJourneys(scheduleDatetimeTuples):
 
 
 def universalFunction(scheduleDatetimeTuples, jsonData):
-    
+    upgradesAllowed = jsonData["upgradesAllowed"]
+    downgradesAllowed = jsonData["downgradesAllowed"]
     weights = jsonToWeights(jsonData)
     affectedPassengers = getCombinedAffectedPassengers(scheduleDatetimeTuples)
     actualJourneys = getCombinedActualJourneys(scheduleDatetimeTuples)
@@ -115,6 +116,8 @@ def universalFunction(scheduleDatetimeTuples, jsonData):
         actualJourneys,
         affectedPassengers,
         weights,
+        upgradesAllowed,
+        downgradesAllowed,
     )
 
     return solution
