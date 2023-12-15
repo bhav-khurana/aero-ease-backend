@@ -1,0 +1,15 @@
+flask
+flask-restful
+flask-cors
+pandas
+dwave-ocean-sdk
+numpy
+random
+datetime
+string
+json
+uuid
+dateutil
+calendar
+os
+sys

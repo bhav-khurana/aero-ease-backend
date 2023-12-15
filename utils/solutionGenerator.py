@@ -275,7 +275,7 @@ def addLinearInequalityConstraints(obj, journeys, pnrs):
 def solveFlightSchedule(obj):
     cqm = ConstrainedQuadraticModel()
     cqm.set_objective(obj)
-    cqmSampler = LeapHybridCQMSampler()
+    cqmSampler = LeapHybridCQMSampler(token = 'DEV-4864ba8387e806708abec3225cd8620950c791a7')
     cqmAnswer = cqmSampler.sample_cqm(cqm)
     solutionsList = cqmAnswer.samples(n = num_of_solutions, sorted_by = 'energy')
     return solutionsList
