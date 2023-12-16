@@ -1,6 +1,6 @@
 import flask
 from flask_restful import Resource
-from flask import request
+from flask import jsonify, request
 import os
 import pandas as pd
 
@@ -11,14 +11,14 @@ scheduleFilePath = os.path.join(
     absolutePath, "..", dataDirectory, scheduleFileName
 )
 
+df = pd.read_csv(scheduleFilePath)
 class FlightDetails(Resource):
-    def get(self):
-        args = request.args
-        scheduleID = args.get("scheduleID")
-        details = {} # {flightNo, departureAirport, arrivalAirport, departureTime, arrivalTime}
-        df = pd.read_csv(scheduleFilePath)
+    def post(self):
+        scheduleIDArr = request.json
+        flight_details_dict = {}  # Use a dictionary to store details by scheduleID
+        print(scheduleIDArr)
         for _, row in df.iterrows():
-            if row['ScheduleID'] == scheduleID:
+            if row['ScheduleID'] in scheduleIDArr:
                 details = {
                     "flightNo": row['FlightNumber'],
                     "departureAirport": row['DepartureAirport'],
@@ -26,6 +26,8 @@ class FlightDetails(Resource):
                     "departureTime": row['DepartureTime'],
                     "arrivalTime": row['ArrivalTime']
                 }
-                break
-        response = flask.jsonify(details)
+                schedule_id = row['ScheduleID']
+                flight_details_dict[schedule_id] = details
+        print("Resp", flight_details_dict)
+        response = jsonify(flight_details_dict)
         return response
