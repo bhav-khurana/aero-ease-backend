@@ -1,0 +1,7 @@
+flask
+flask-restful
+flask-cors
+pandas
+dwave-ocean-sdk
+datetime
+uuid

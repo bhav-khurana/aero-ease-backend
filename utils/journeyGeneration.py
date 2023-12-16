@@ -1,8 +1,6 @@
 import uuid
 from datetime import datetime
-import numpy as np
 import sys, os
-from dateutil import parser
 from utils.loadSheetData import (
     scheduleDataObjects,
     bookingPNRDataObjects,
